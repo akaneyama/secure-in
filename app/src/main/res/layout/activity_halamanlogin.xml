@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/backgroundbaru"
+    tools:context=".halamanlogin">
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/card"
+        android:layout_width="370dp"
+        android:layout_height="590dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:cardCornerRadius="20dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <!--android:text="Username Atau Password Salah!"-->
+
+
+            <TextView
+                android:id="@+id/statuslogin"
+                android:layout_width="280dp"
+                android:layout_height="25dp"
+                android:layout_marginTop="240dp"
+                android:layout_marginBottom="5dp"
+                android:shadowRadius="5"
+                android:text=""
+                android:textAlignment="center"
+                android:textColor="@android:color/holo_red_dark"
+                android:textSize="13dp" />
+
+            <Button
+                android:id="@+id/btn_login"
+                android:layout_width="280dp"
+                android:layout_height="50dp"
+                android:backgroundTint="@color/ungubutton"
+                android:elevation="10dp"
+                android:text="Login"
+                android:textColor="@android:color/white"
+                android:textSize="16dp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"
+                android:layout_marginTop="10dp"
+                android:fontFamily="@font/opensansmediumitalic"
+                android:text="- Or Login With -" />
+
+            <ImageView
+                android:id="@+id/btnlogingoogle"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:layout_marginTop="10dp"
+                app:srcCompat="@drawable/logingoogle" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:orientation="horizontal"
+                android:layout_marginTop="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="30dp"
+                    android:fontFamily="@font/opensansmediumitalic"
+                    android:text="Don't have an account yet?" />
+
+                <TextView
+                    android:id="@+id/btndaftar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="30dp"
+                    android:textColor="@color/ungubutton"
+                    android:fontFamily="@font/opensansmediumitalic"
+                    android:text=" Register" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+
+
+    <ImageView
+        android:id="@+id/imagekit"
+        android:layout_height="60dp"
+        android:layout_marginTop="60dp"
+        android:layout_width="wrap_content"
+        app:srcCompat="@drawable/secureinlogo"
+        app:layout_constraintTop_toTopOf="@id/card"
+        app:layout_constraintStart_toStartOf="parent"
+        android:elevation="100dp"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <TextView
+        android:id="@+id/tv_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/opensansmediumitalic"
+        android:text="Please login first!"
+        android:textSize="16dp"
+        android:textStyle="italic"
+        android:layout_marginTop="20dp"
+        android:elevation="10dp"
+        app:layout_constraintTop_toBottomOf="@id/imagekit"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Container untuk Username -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:elevation="10dp"
+        android:id="@+id/container_username"
+        android:layout_width="280dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        app:layout_constraintTop_toBottomOf="@id/tv_description"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Icon Username -->
+        <ImageView
+            android:id="@+id/icon_username"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            app:srcCompat="@drawable/usernamelog"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <!-- Input Username -->
+        <EditText
+            android:id="@+id/et_username"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:hint="Username"
+            android:paddingStart="10dp"
+            android:background="@null"
+            app:layout_constraintStart_toEndOf="@id/icon_username"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <View
+            android:layout_width="320dp"
+            android:layout_height="1dp"
+            android:background="@android:color/black"
+            app:layout_constraintStart_toStartOf="@id/et_username"
+            app:layout_constraintEnd_toEndOf="@id/et_username"
+            app:layout_constraintTop_toBottomOf="@id/et_username"
+            app:layout_constraintWidth_percent="0.8"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Container untuk Password -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:elevation="10dp"
+        android:id="@+id/container_password"
+        android:layout_width="280dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        app:layout_constraintTop_toBottomOf="@id/container_username"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Icon Password -->
+        <ImageView
+            android:id="@+id/icon_password"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            app:srcCompat="@drawable/passwordlog"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <!-- Input Password -->
+        <EditText
+            android:id="@+id/et_password"
+            android:layout_width="240dp"
+            android:layout_height="40dp"
+            android:background="@null"
+            android:hint="Password"
+            android:inputType="textPassword"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/icon_password"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/lihatpassword"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            app:srcCompat="@drawable/eyesopen"
+            android:layout_marginLeft="-20dp"
+            app:layout_constraintStart_toEndOf="@id/et_password"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <View
+            android:layout_width="320dp"
+            android:layout_height="1dp"
+            android:background="@android:color/black"
+            app:layout_constraintStart_toStartOf="@id/et_password"
+            app:layout_constraintEnd_toEndOf="@id/et_password"
+            app:layout_constraintTop_toBottomOf="@id/et_password"
+            app:layout_constraintWidth_percent="0.8"/>
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
