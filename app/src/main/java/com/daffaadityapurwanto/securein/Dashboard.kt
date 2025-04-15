@@ -65,22 +65,22 @@ class Dashboard : AppCompatActivity() {
         setContentView(R.layout.activity_dashboard)
         goodmorning = findViewById(R.id.ucapanselamat)
         setGreeting()
-//        tombolkemenumypassword = findViewById(R.id.tombolkemenumypassword_dashboard)
-//        tombolkemenuDashboard = findViewById(R.id.tombolmenukebackup_dashboard)
-//        tombolkemenuSetting = findViewById(R.id.tombolmenukesetting_dashboard)
-//        tombolkemenuBackup = findViewById(R.id.tombolmenukebackup_dashboard)
-//        tombolkemenumypassword.setOnClickListener {
-//            goToMenupassword()
-//        }
-//        tombolkemenuDashboard.setOnClickListener {
-//
-//        }
-//        tombolkemenuSetting.setOnClickListener {
-//            goToSetting()
-//        }
-//        tombolkemenuBackup.setOnClickListener {
-//            goToBackupmenu()
-//        }
+        tombolkemenumypassword = findViewById(R.id.tombolkemenumypassword_dashboard)
+        tombolkemenuDashboard = findViewById(R.id.tombolmenukebackup_dashboard)
+        tombolkemenuSetting = findViewById(R.id.tombolmenukesetting_dashboard)
+        tombolkemenuBackup = findViewById(R.id.tombolmenukebackup_dashboard)
+        tombolkemenumypassword.setOnClickListener {
+            goToMenupassword()
+        }
+        tombolkemenuDashboard.setOnClickListener {
+
+        }
+        tombolkemenuSetting.setOnClickListener {
+            goToSetting()
+        }
+        tombolkemenuBackup.setOnClickListener {
+            goToBackupmenu()
+        }
 
         val listView = findViewById<ListView>(R.id.listViewNewlyAdded)
 

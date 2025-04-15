@@ -8,6 +8,16 @@
     android:background="@drawable/backgroundbaru"
     tools:context=".menusetting">
 
+    <androidx.fragment.app.FragmentContainerView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@id/tampilanbawah"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintHeight_percent="0.91"
+        android:id="@+id/fragmentcontainer"/>
+
 
     <!--tampilan bawah-->
     <LinearLayout
@@ -110,6 +120,7 @@
             android:layout_height="0dp"
             android:layout_weight="1" />
         <LinearLayout
+            android:id="@+id/tombolcobasetting"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:orientation="vertical"
