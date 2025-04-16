@@ -52,10 +52,6 @@ class DashboardFragment : Fragment() {
 
     private lateinit var goodmorning: TextView
     private lateinit var angkapasswordtotal: TextView
-    private lateinit var tombolkemenumypassword: LinearLayout
-    private lateinit var tombolkemenuDashboard: LinearLayout
-    private lateinit var tombolkemenuBackup: LinearLayout
-    private lateinit var tombolkemenuSetting: LinearLayout
 
     private fun setGreeting() {
         val now = LocalTime.now()
@@ -86,7 +82,7 @@ class DashboardFragment : Fragment() {
         setGreeting()
 
         val listView = view.findViewById<ListView>(R.id.listViewNewlyAdded)
-        val btnAdd = view.findViewById<ImageView>(R.id.buattambahindata)
+
 
         val dummyData = listOf(
             NewlyAddedItem(R.drawable.logingoogle, "admin@gmail.com", "2025-04-10"),
@@ -101,9 +97,7 @@ class DashboardFragment : Fragment() {
 
         angkapasswordtotal.text = dummyData.size.toString()
 
-        btnAdd.setOnClickListener {
-            Toast.makeText(requireContext(), "Tombol Tambah ditekan", Toast.LENGTH_SHORT).show()
-        }
+
 
 
     }

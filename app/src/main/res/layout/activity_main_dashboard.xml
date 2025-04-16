@@ -19,13 +19,24 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHeight_percent="0.91" />
 
-
+    <ImageView
+        android:id="@+id/buattambahindata"
+        android:layout_width="0dp"
+        app:layout_constraintWidth_percent="0.15"
+        android:layout_height="0dp"
+        app:layout_constraintHeight_percent="0.11"
+        android:src="@drawable/adddata"
+        android:layout_gravity="center"
+        app:layout_constraintBottom_toTopOf="@id/tampilanbawah"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="20dp"
+        android:elevation="10dp"/>
     <!--tampilan bawah-->
     <LinearLayout
         android:id="@+id/tampilanbawah"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintHeight_percent="0.08"
+        app:layout_constraintHeight_percent="0.074"
         android:orientation="horizontal"
         android:padding="10dp"
         android:gravity="bottom"
@@ -39,7 +50,9 @@
             android:layout_height="50dp"
             android:orientation="vertical"
             android:gravity="center"
-            android:layout_gravity="center">
+            android:layout_gravity="center"
+            android:clickable="true"
+            android:focusable="true">
 
             <ImageView
                 android:layout_width="20dp"
@@ -52,7 +65,7 @@
                 android:layout_height="wrap_content"
                 android:text="Home"
                 android:gravity="center"
-                android:textSize="13dp"
+                android:textSize="10dp"
                 android:fontFamily="@font/opensanssemibold"
                 android:textAlignment="center"/>
         </LinearLayout>
@@ -66,7 +79,7 @@
 
         <LinearLayout
             android:id="@+id/tombolmypassword"
-            android:layout_width="90dp"
+            android:layout_width="50dp"
             android:layout_height="50dp"
             android:orientation="vertical"
             android:gravity="center"
@@ -81,9 +94,9 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="My Password"
+                android:text="Password"
                 android:textColor="@color/white"
-                android:textSize="13dp"
+                android:textSize="10dp"
                 android:gravity="center"
                 android:fontFamily="@font/opensanssemibold"
                 android:textAlignment="center"/>
@@ -115,7 +128,7 @@
                 android:layout_height="wrap_content"
                 android:text="Backup"
                 android:gravity="center"
-                android:textSize="13dp"
+                android:textSize="10dp"
                 android:textColor="@color/white"
                 android:fontFamily="@font/opensanssemibold"
                 android:textAlignment="center"/>
@@ -145,7 +158,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Setting"
-                android:textSize="13dp"
+                android:textSize="10dp"
                 android:gravity="center"
                 android:textColor="@color/white"
                 android:fontFamily="@font/opensanssemibold"

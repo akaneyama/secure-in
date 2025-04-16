@@ -293,18 +293,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
-    <ImageView
-        android:id="@+id/buattambahindata"
-        android:layout_width="0dp"
-        app:layout_constraintWidth_percent="0.15"
-        android:layout_height="0dp"
-        app:layout_constraintHeight_percent="0.11"
-        android:src="@drawable/adddata"
-        android:layout_gravity="center"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_margin="20dp"
-        android:elevation="10dp"/>
+
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
