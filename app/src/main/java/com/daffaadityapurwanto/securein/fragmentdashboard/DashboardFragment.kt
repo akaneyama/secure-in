@@ -1,33 +1,72 @@
 package com.daffaadityapurwanto.securein.fragmentdashboard
 
+import android.content.Context
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.BaseAdapter
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ListView
+import android.widget.TextView
+import android.widget.Toast
 import com.daffaadityapurwanto.securein.R
+import java.time.LocalTime
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [DashboardFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class DashboardFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+    data class NewlyAddedItem(
+        val logoResId: Int,
+        val emailName: String,
+        val createdDate: String
+    )
+
+    class NewlyAddedAdapter(
+        private val context: Context,
+        private val dataList: List<NewlyAddedItem>
+    ) : BaseAdapter() {
+
+        override fun getCount(): Int = dataList.size
+        override fun getItem(position: Int): Any = dataList[position]
+        override fun getItemId(position: Int): Long = position.toLong()
+
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+            val view = convertView ?: LayoutInflater.from(context)
+                .inflate(R.layout.item_newly_addeddaridashboard, parent, false)
+
+            val item = dataList[position]
+
+            val logo = view.findViewById<ImageView>(R.id.logoItem)
+            val email = view.findViewById<TextView>(R.id.emailName)
+            val date = view.findViewById<TextView>(R.id.createdDate)
+
+            logo.setImageResource(item.logoResId)
+            email.text = item.emailName
+            date.text = "Created: ${item.createdDate}"
+
+            return view
         }
+    }
+
+    private lateinit var goodmorning: TextView
+    private lateinit var angkapasswordtotal: TextView
+    private lateinit var tombolkemenumypassword: LinearLayout
+    private lateinit var tombolkemenuDashboard: LinearLayout
+    private lateinit var tombolkemenuBackup: LinearLayout
+    private lateinit var tombolkemenuSetting: LinearLayout
+
+    private fun setGreeting() {
+        val now = LocalTime.now()
+        val greeting = when (now.hour) {
+            in 5..10 -> "Hello, Good Morning"
+            in 11..17 -> "Hello, Good Afternoon"
+            in 18..22 -> "Hello, Good Night"
+            else -> "Good Night, Don't Forget To Sleep"
+        }
+
+        goodmorning.text = greeting
     }
 
     override fun onCreateView(
@@ -38,23 +77,34 @@ class DashboardFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_dashboard, container, false)
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment DashboardFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            DashboardFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        goodmorning = view.findViewById(R.id.ucapanselamat)
+        angkapasswordtotal = view.findViewById(R.id.angkatotalpassworddashboard)
+
+        setGreeting()
+
+        val listView = view.findViewById<ListView>(R.id.listViewNewlyAdded)
+        val btnAdd = view.findViewById<ImageView>(R.id.buattambahindata)
+
+        val dummyData = listOf(
+            NewlyAddedItem(R.drawable.logingoogle, "admin@gmail.com", "2025-04-10"),
+            NewlyAddedItem(R.drawable.logingoogle, "user01@yahoo.com", "2025-04-09"),
+            NewlyAddedItem(R.drawable.logingoogle, "daffa@securein.id", "2025-04-08"),
+            NewlyAddedItem(R.drawable.logingoogle, "user01@yahoo.com", "2025-04-09"),
+            NewlyAddedItem(R.drawable.logingoogle, "daffa@securein.id", "2025-04-08")
+        )
+
+        val adapter = NewlyAddedAdapter(requireContext(), dummyData)
+        listView.adapter = adapter
+
+        angkapasswordtotal.text = dummyData.size.toString()
+
+        btnAdd.setOnClickListener {
+            Toast.makeText(requireContext(), "Tombol Tambah ditekan", Toast.LENGTH_SHORT).show()
+        }
+
+
     }
 }

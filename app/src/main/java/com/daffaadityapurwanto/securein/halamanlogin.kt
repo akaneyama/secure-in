@@ -50,7 +50,7 @@ class halamanlogin : AppCompatActivity() {
         }
     }
     private fun goToDashboard() {
-        Intent(this, Dashboard::class.java).also {
+        Intent(this, MainDashboard::class.java).also {
             startActivity(it)
         }
         finish()

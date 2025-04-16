@@ -1,32 +1,50 @@
 package com.daffaadityapurwanto.securein.fragmentdashboard
 
+import android.content.Context
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.BaseAdapter
+import android.widget.ImageView
+import android.widget.ListView
+import android.widget.TextView
 import com.daffaadityapurwanto.securein.R
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [BackuprestoreFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class BackuprestoreFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+    data class logbackupandrestore(
+        val logoResId: Int,
+        val emailName: String,
+        val createdDate: String
+    )
+
+    class Adapterlog(
+        private val context: Context,
+        private val dataList: List<logbackupandrestore>
+    ) : BaseAdapter() {
+
+        override fun getCount(): Int = dataList.size
+        override fun getItem(position: Int): Any = dataList[position]
+        override fun getItemId(position: Int): Long = position.toLong()
+
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+            val view = convertView ?: LayoutInflater.from(context)
+                .inflate(R.layout.loglistdaribackupandrestore, parent, false)
+
+            val item = dataList[position]
+
+            val logo = view.findViewById<ImageView>(R.id.logoItem)
+            val email = view.findViewById<TextView>(R.id.emailName)
+            val date = view.findViewById<TextView>(R.id.createdDate)
+
+            logo.setImageResource(item.logoResId)
+            email.text = item.emailName
+            date.text = "Created: ${item.createdDate}"
+
+            return view
         }
     }
 
@@ -38,23 +56,26 @@ class BackuprestoreFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_backuprestore, container, false)
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment BackuprestoreFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            BackuprestoreFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val listView = view.findViewById<ListView>(R.id.listlog)
+
+        val dummyData = listOf(
+            logbackupandrestore(R.drawable.logingoogle, "daffa@gmail.com", "2025-04-10"),
+            logbackupandrestore(R.drawable.logingoogle, "securein@example.com", "2025-04-11"),
+            logbackupandrestore(R.drawable.logingoogle, "daffa@gmail.com", "2025-04-10"),
+            logbackupandrestore(R.drawable.logingoogle, "securein@example.com", "2025-04-11"),
+            logbackupandrestore(R.drawable.logingoogle, "daffa@gmail.com", "2025-04-10"),
+            logbackupandrestore(R.drawable.logingoogle, "securein@example.com", "2025-04-11"),
+            logbackupandrestore(R.drawable.logingoogle, "daffa@gmail.com", "2025-04-10"),
+            logbackupandrestore(R.drawable.logingoogle, "securein@example.com", "2025-04-11"),
+            logbackupandrestore(R.drawable.logingoogle, "daffa@gmail.com", "2025-04-10"),
+            logbackupandrestore(R.drawable.logingoogle, "securein@example.com", "2025-04-11"),
+            logbackupandrestore(R.drawable.logingoogle, "daffa@gmail.com", "2025-04-10"),
+            logbackupandrestore(R.drawable.logingoogle, "securein@example.com", "2025-04-11")
+        )
+
+        val adapter = Adapterlog(requireContext(), dummyData)
+        listView.adapter = adapter
     }
 }

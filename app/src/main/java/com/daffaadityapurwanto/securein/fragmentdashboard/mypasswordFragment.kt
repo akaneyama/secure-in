@@ -1,32 +1,50 @@
 package com.daffaadityapurwanto.securein.fragmentdashboard
 
+import android.content.Context
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.BaseAdapter
+import android.widget.ImageView
+import android.widget.ListView
+import android.widget.TextView
 import com.daffaadityapurwanto.securein.R
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [mypasswordFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
+
 class mypasswordFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+    data class ItemPassword(
+        val logoResId: Int,
+        val emailName: String,
+        val createdDate: String
+    )
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+    class AdapterPassword(
+        private val context: Context,
+        private val dataList: List<ItemPassword>
+    ) : BaseAdapter() {
+
+        override fun getCount(): Int = dataList.size
+        override fun getItem(position: Int): Any = dataList[position]
+        override fun getItemId(position: Int): Long = position.toLong()
+
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+            val view = convertView ?: LayoutInflater.from(context)
+                .inflate(R.layout.passwordlistdarimenupassword, parent, false)
+
+            val item = dataList[position]
+
+            val logo = view.findViewById<ImageView>(R.id.logoItem)
+            val email = view.findViewById<TextView>(R.id.emailName)
+            val date = view.findViewById<TextView>(R.id.createdDate)
+
+            logo.setImageResource(item.logoResId)
+            email.text = item.emailName
+            date.text = "Created: ${item.createdDate}"
+
+            return view
         }
     }
 
@@ -38,23 +56,28 @@ class mypasswordFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_mypassword, container, false)
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment mypasswordFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            mypasswordFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val listView = view.findViewById<ListView>(R.id.listpasswordtampil)
+
+        val dummyData = listOf(
+            ItemPassword(R.drawable.logingoogle, "daffa@gmail.com", "2025-04-10"),
+            ItemPassword(R.drawable.logingoogle, "securein@example.com", "2025-04-11"),
+            ItemPassword(R.drawable.logingoogle, "daffa@gmail.com", "2025-04-10"),
+            ItemPassword(R.drawable.logingoogle, "securein@example.com", "2025-04-11"),
+            ItemPassword(R.drawable.logingoogle, "daffa@gmail.com", "2025-04-10"),
+            ItemPassword(R.drawable.logingoogle, "securein@example.com", "2025-04-11"),
+            ItemPassword(R.drawable.logingoogle, "daffa@gmail.com", "2025-04-10"),
+            ItemPassword(R.drawable.logingoogle, "securein@example.com", "2025-04-11"),
+            ItemPassword(R.drawable.logingoogle, "daffa@gmail.com", "2025-04-10"),
+            ItemPassword(R.drawable.logingoogle, "securein@example.com", "2025-04-11"),
+            ItemPassword(R.drawable.logingoogle, "daffa@gmail.com", "2025-04-10"),
+            ItemPassword(R.drawable.logingoogle, "securein@example.com", "2025-04-11")
+        )
+
+        val adapter = AdapterPassword(requireContext(), dummyData)
+        listView.adapter = adapter
     }
+
+
 }
