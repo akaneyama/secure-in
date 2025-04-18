@@ -33,12 +33,12 @@ class halamanlogin : AppCompatActivity() {
             isPasswordVisible = !isPasswordVisible
             if (isPasswordVisible) {
                 etPassword.inputType = InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-                ivShowPassword.setImageResource(R.drawable.eyesclose) // Ganti ikon mata tertutup
+                ivShowPassword.setImageResource(R.drawable.eyesclose)
             } else {
                 etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-                ivShowPassword.setImageResource(R.drawable.eyesopen) // Ganti ikon mata terbuka
+                ivShowPassword.setImageResource(R.drawable.eyesopen)
             }
-            etPassword.setSelection(etPassword.text.length) // Memastikan cursor tetap di akhir teks
+            etPassword.setSelection(etPassword.text.length)
         }
         btnDaftar.setOnClickListener {
             goToDaftar()
