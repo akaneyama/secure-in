@@ -13,6 +13,8 @@ import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
 import com.daffaadityapurwanto.securein.R
+import com.daffaadityapurwanto.securein.data.CurrentUser
+import com.daffaadityapurwanto.securein.data.users
 import java.time.LocalTime
 
 class DashboardFragment : Fragment() {
@@ -52,6 +54,7 @@ class DashboardFragment : Fragment() {
 
     private lateinit var goodmorning: TextView
     private lateinit var angkapasswordtotal: TextView
+    private lateinit var namauser: TextView
 
     private fun setGreeting() {
         val now = LocalTime.now()
@@ -80,6 +83,9 @@ class DashboardFragment : Fragment() {
         angkapasswordtotal = view.findViewById(R.id.angkatotalpassworddashboard)
 
         setGreeting()
+        namauser = view.findViewById(R.id.namauser)
+        //panggil dari class
+        namauser.text = CurrentUser.user?.nama.toString()
 
         val listView = view.findViewById<ListView>(R.id.listViewNewlyAdded)
 

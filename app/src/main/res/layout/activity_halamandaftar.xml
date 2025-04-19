@@ -11,7 +11,7 @@
     <androidx.cardview.widget.CardView
         android:id="@+id/card"
         android:layout_width="370dp"
-        android:layout_height="590dp"
+        android:layout_height="660dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -24,14 +24,11 @@
             android:gravity="center"
             android:orientation="vertical">
 
-
-
-
             <Button
-                android:id="@+id/btn_login"
+                android:id="@+id/btn_daftarin"
                 android:layout_width="280dp"
                 android:layout_height="50dp"
-                android:layout_marginTop="410dp"
+                android:layout_marginTop="470dp"
                 android:backgroundTint="@color/ungubutton"
                 android:elevation="10dp"
                 android:text="Register"
@@ -96,11 +93,55 @@
     <!-- Container untuk Username -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:elevation="10dp"
-        android:id="@+id/container_username"
+        android:id="@+id/container_nama"
         android:layout_width="280dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         app:layout_constraintTop_toBottomOf="@id/imagekit"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Icon Username -->
+        <ImageView
+            android:id="@+id/icon_nama"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            app:srcCompat="@drawable/usernamelog"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <!-- Input Username -->
+        <EditText
+            android:id="@+id/et_nama"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:hint="Name"
+            android:paddingStart="10dp"
+            android:background="@null"
+            app:layout_constraintStart_toEndOf="@id/icon_nama"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <View
+            android:layout_width="320dp"
+            android:layout_height="1dp"
+            android:background="@android:color/black"
+            app:layout_constraintStart_toStartOf="@id/et_nama"
+            app:layout_constraintEnd_toEndOf="@id/et_nama"
+            app:layout_constraintTop_toBottomOf="@id/et_nama"
+            app:layout_constraintWidth_percent="0.8"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:elevation="10dp"
+        android:id="@+id/container_username"
+        android:layout_width="280dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        app:layout_constraintTop_toBottomOf="@id/container_email"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -145,7 +186,7 @@
         android:layout_width="280dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        app:layout_constraintTop_toBottomOf="@id/container_email"
+        app:layout_constraintTop_toBottomOf="@id/container_username"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -281,7 +322,7 @@
         android:layout_width="280dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        app:layout_constraintTop_toBottomOf="@id/container_username"
+        app:layout_constraintTop_toBottomOf="@id/container_nama"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 

@@ -3,14 +3,18 @@ package com.daffaadityapurwanto.securein
 import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
+import android.view.LayoutInflater
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.daffaadityapurwanto.securein.data.databaseHelper
 
 class halamanlogin : AppCompatActivity() {
     private lateinit var etPassword: EditText
@@ -29,6 +33,7 @@ class halamanlogin : AppCompatActivity() {
         ivShowPassword = findViewById(R.id.lihatpassword)
         btnLogin = findViewById(R.id.btn_login)
         btnDaftar = findViewById(R.id.btndaftar)
+
         ivShowPassword.setOnClickListener {
             isPasswordVisible = !isPasswordVisible
             if (isPasswordVisible) {
@@ -46,7 +51,24 @@ class halamanlogin : AppCompatActivity() {
 
 
         btnLogin.setOnClickListener {
-            goToDashboard()
+            if(etUsername.text.isNullOrEmpty() || etPassword.text.isNullOrEmpty()){
+                //Toast.makeText(this, "username atau password tidak boleh kosong!", Toast.LENGTH_SHORT).show()
+                showCustomDialog("empty_password")
+                return@setOnClickListener
+            }
+            val DBhelper = databaseHelper(this)
+            val user = DBhelper.loginandcheckuser(etUsername.text.toString(), etPassword.text.toString())
+
+            if(user != null){
+                //Toast.makeText(this, "Selamat datang, ${user.nama}", Toast.LENGTH_SHORT).show()
+                goToDashboard()
+            }
+            else{
+                //Toast.makeText(this, "Password Salah", Toast.LENGTH_SHORT).show()
+                showCustomDialog("wrong_password")
+            }
+
+
         }
     }
     private fun goToDashboard() {
@@ -60,5 +82,33 @@ class halamanlogin : AppCompatActivity() {
             startActivity(it)
         }
         finish()
+    }
+    private fun showCustomDialog(status: String) {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.logindialog_status, null)
+        val alertDialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+
+        val imgStatus = dialogView.findViewById<ImageView>(R.id.imgStatus)
+        val txtStatus = dialogView.findViewById<TextView>(R.id.txtStatus)
+        val btnOk = dialogView.findViewById<Button>(R.id.btnOk)
+
+        when (status) {
+            "wrong_password" -> {
+                imgStatus.setImageResource(R.drawable.crosslogin)
+                txtStatus.text = "Username atau Password Salah"
+            }
+            "empty_password" -> {
+                imgStatus.setImageResource(R.drawable.dangerlogin)
+                txtStatus.text = "Username atau Password Kosong"
+            }
+        }
+
+        btnOk.setOnClickListener {
+            alertDialog.dismiss()
+        }
+
+        alertDialog.setCancelable(false)
+        alertDialog.show()
     }
 }

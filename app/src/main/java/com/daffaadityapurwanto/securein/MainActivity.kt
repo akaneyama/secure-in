@@ -10,12 +10,14 @@ import androidx.appcompat.app.AppCompatActivity
 import android.widget.*
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.daffaadityapurwanto.securein.data.databaseHelper
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        val dbHelper = databaseHelper(this)
+        dbHelper.copyDatabaseIfNeeded(this)
         Handler(Looper.getMainLooper()).postDelayed({
             runOnUiThread {
                 goToMain()
