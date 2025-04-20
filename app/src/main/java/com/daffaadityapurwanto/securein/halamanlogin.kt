@@ -15,6 +15,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.daffaadityapurwanto.securein.data.databaseHelper
+import com.daffaadityapurwanto.securein.encryption.Encrypt
+import com.daffaadityapurwanto.securein.encryption.keyAES
 
 class halamanlogin : AppCompatActivity() {
     private lateinit var etPassword: EditText
@@ -49,7 +51,8 @@ class halamanlogin : AppCompatActivity() {
             goToDaftar()
         }
 
-
+        val kunciAES = keyAES()
+        val encrypt = Encrypt(kunciAES.KunciAES128)
         btnLogin.setOnClickListener {
             if(etUsername.text.isNullOrEmpty() || etPassword.text.isNullOrEmpty()){
                 //Toast.makeText(this, "username atau password tidak boleh kosong!", Toast.LENGTH_SHORT).show()
@@ -57,14 +60,15 @@ class halamanlogin : AppCompatActivity() {
                 return@setOnClickListener
             }
             val DBhelper = databaseHelper(this)
-            val user = DBhelper.loginandcheckuser(etUsername.text.toString(), etPassword.text.toString())
+            val hasilencrypt = encrypt.enkripsi(etPassword.text.toString())
+            val user = DBhelper.loginandcheckuser(etUsername.text.toString(), hasilencrypt)
 
             if(user != null){
                 //Toast.makeText(this, "Selamat datang, ${user.nama}", Toast.LENGTH_SHORT).show()
                 goToDashboard()
             }
             else{
-                //Toast.makeText(this, "Password Salah", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Password Salah ${hasilencrypt}", Toast.LENGTH_SHORT).show()
                 showCustomDialog("wrong_password")
             }
 
