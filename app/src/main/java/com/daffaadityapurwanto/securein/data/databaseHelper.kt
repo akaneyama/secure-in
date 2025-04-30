@@ -7,13 +7,16 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.widget.Toast
 import com.daffaadityapurwanto.securein.data.users
+import com.daffaadityapurwanto.securein.encryption.Encrypt
+import com.daffaadityapurwanto.securein.encryption.keyAES
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
-
+import java.security.SecureRandom
+import android.util.Base64
 
 
 class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
@@ -102,15 +105,24 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
         db.close()
         return user
     }
+    fun generateRandomKeyString(length: Int = 16): String {
+        val allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+        return (1..length)
+            .map { allowedChars[SecureRandom().nextInt(allowedChars.length)] }
+            .joinToString("")
+    }
     fun tambahkanUser(email: String, nama: String,  username: String, password: String): Boolean {
         val db = this.writableDatabase
         val values = ContentValues()
+        val kunciAES = keyAES()
+        val encrypt = Encrypt(kunciAES.KunciAES128,kunciAES.KunciIVKey)
+        val kunciBase64 = generateRandomKeyString()
         values.put("uid","0")
-        values.put("kunci_enkripsi","0")
+        values.put("kunci_enkripsi",kunciBase64)
         values.put("email", email)
         values.put("nama", nama)
         values.put("username", username)
-        values.put("password", password)
+        values.put("password", encrypt.enkripsi(password))
 
         val result = db.insert("users", null, values)
         db.close()

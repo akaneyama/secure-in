@@ -22,6 +22,7 @@
         app:layout_constraintTop_toTopOf="parent"/>
 
     <LinearLayout
+        android:gravity="center_horizontal"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:orientation="vertical"
@@ -45,6 +46,27 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Export to File (Encrypted)"
+                android:textSize="16sp"
+                android:fontFamily="@font/opensansbold"
+                android:textColor="@color/white"/>
+
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/exporttofileunencrypted"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/kotakdarisettingfragment"
+            android:padding="12dp"
+            android:gravity="center_vertical">
+
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Export to File (Clear File)"
                 android:textSize="16sp"
                 android:fontFamily="@font/opensansbold"
                 android:textColor="@color/white"/>
@@ -118,6 +140,8 @@
                 android:layout_height="wrap_content"/>
         </LinearLayout>
 
+
+
         <LinearLayout
             android:id="@+id/keluarsetting"
             android:layout_width="match_parent"
@@ -135,6 +159,7 @@
                 app:srcCompat="@drawable/keluardarisetting"/>
 
             <TextView
+
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -142,8 +167,45 @@
                 android:textSize="16sp"
                 android:fontFamily="@font/opensansbold"
                 android:textColor="@color/white"/>
-
         </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="bottom">
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <LinearLayout
+                android:id="@+id/aboutus"
+                android:layout_width="wrap_content"
+                android:layout_height="55dp"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/kotakdarisettingfragment"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_marginLeft="10dp"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    app:srcCompat="@drawable/tanda_seru"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="About Us"
+                    android:layout_marginRight="20dp"
+                    android:textSize="16sp"
+                    android:fontFamily="@font/opensansbold"
+                    android:textColor="@color/white"/>
+            </LinearLayout>
+        </LinearLayout>
+
 
 
     </LinearLayout>

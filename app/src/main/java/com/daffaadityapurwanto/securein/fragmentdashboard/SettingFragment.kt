@@ -1,60 +1,60 @@
 package com.daffaadityapurwanto.securein.fragmentdashboard
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.Toast
 import com.daffaadityapurwanto.securein.R
+import com.daffaadityapurwanto.securein.data.CurrentUser
+import com.daffaadityapurwanto.securein.halamandaftar
+import com.daffaadityapurwanto.securein.halamanlogin
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [SettingFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class SettingFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
+        // Inflate layout dan kembalikan view-nya
         return inflater.inflate(R.layout.fragment_setting, container, false)
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment SettingFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            SettingFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val tombolkeluar = view.findViewById<LinearLayout>(R.id.keluarsetting)
+        tombolkeluar.setOnClickListener {
+            Intent(context, halamanlogin::class.java).also {
+                startActivity(it)
+
             }
+
+        }
+
+        val exportfileunencrypted = view.findViewById<LinearLayout>(R.id.exporttofileunencrypted)
+        exportfileunencrypted.setOnClickListener {
+            try {
+                val dbFile = requireContext().getDatabasePath("secureindb.db")
+                val outFile = File(requireContext().getExternalFilesDir(null), "secureindbbackup.db")
+
+                FileInputStream(dbFile).channel.use { src ->
+                    FileOutputStream(outFile).channel.use { dst ->
+                        dst.transferFrom(src, 0, src.size())
+                    }
+                }
+
+                Toast.makeText(requireContext(), "Database berhasil diekspor ke:\n${outFile.absolutePath}", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(requireContext(), "Gagal ekspor DB: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 }

@@ -52,7 +52,7 @@ class halamanlogin : AppCompatActivity() {
         }
 
         val kunciAES = keyAES()
-        val encrypt = Encrypt(kunciAES.KunciAES128)
+        val encrypt = Encrypt(kunciAES.KunciAES128, kunciAES.KunciIVKey)
         btnLogin.setOnClickListener {
             if(etUsername.text.isNullOrEmpty() || etPassword.text.isNullOrEmpty()){
                 //Toast.makeText(this, "username atau password tidak boleh kosong!", Toast.LENGTH_SHORT).show()
@@ -68,7 +68,7 @@ class halamanlogin : AppCompatActivity() {
                 goToDashboard()
             }
             else{
-                Toast.makeText(this, "Password Salah ${hasilencrypt}", Toast.LENGTH_SHORT).show()
+               // Toast.makeText(this, "Password Salah ${hasilencrypt}", Toast.LENGTH_SHORT).show()
                 showCustomDialog("wrong_password")
             }
 
