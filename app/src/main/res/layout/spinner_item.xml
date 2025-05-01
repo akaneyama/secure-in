@@ -18,7 +18,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Kategori"
-        android:textColor="@color/white"
+        android:textColor="@color/black"
         android:fontFamily="@font/opensansmedium"
         android:textSize="16sp" />
 </LinearLayout>

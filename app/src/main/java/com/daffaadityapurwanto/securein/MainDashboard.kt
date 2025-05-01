@@ -2,7 +2,9 @@ package com.daffaadityapurwanto.securein
 
 import android.os.Bundle
 import android.content.Context
+import android.content.Intent
 import android.view.View
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -32,6 +34,7 @@ class MainDashboard : AppCompatActivity() {
     private var currentFragmentType = FragmentType.DASHBOARD
     private lateinit var binding: ActivityMainDashboardBinding
     private lateinit var viewPager: ViewPager2
+    private lateinit var imageplus: ImageView
     private var currentFragment: Fragment? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,6 +42,14 @@ class MainDashboard : AppCompatActivity() {
         //setContentView(R.layout.activity_main_dashboard)
         setContentView(binding.root)
         viewPager = binding.fragmentContainerView
+        imageplus = findViewById(R.id.buattambahindata)
+        imageplus.setOnClickListener {
+            Intent(this, menutambahdanedit::class.java).also {
+                startActivity(it)
+            }
+            finish()
+
+        }
         binding.tombolhome.background = ContextCompat.getDrawable(this, R.drawable.bulat)
         val fragmentList = listOf(
             DashboardFragment(),

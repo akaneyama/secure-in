@@ -1,6 +1,8 @@
 package com.daffaadityapurwanto.securein
 
+import android.content.Intent
 import android.os.Bundle
+import android.text.InputType
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -14,21 +16,47 @@ import com.daffaadityapurwanto.securein.data.Kategori
 
 class menutambahdanedit : AppCompatActivity() {
     private lateinit var spinnerKategori: Spinner
-
+    private lateinit var etPassword: EditText
+    private lateinit var ivShowPassword: ImageView
+    private lateinit var kembalikemain: ImageView
     private val kategoriList = listOf(
-        Kategori("Pribadi", R.drawable.logingoogle),
-        Kategori("Pekerjaan", R.drawable.logingoogle),
-        Kategori("Keuangan", R.drawable.logingoogle),
-        Kategori("Sosial", R.drawable.logingoogle)
+        Kategori("Gmail", R.drawable.logingoogle),
+        Kategori("Reddit", R.drawable.logingoogle),
+        Kategori("Whatsapp", R.drawable.logingoogle),
+        Kategori("Free fire", R.drawable.logingoogle)
     )
+    private var isPasswordVisible = false
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_menutambahdanedit)
+        kembalikemain = findViewById(R.id.buttonkembali)
+        kembalikemain.setOnClickListener{
+            Intent(this, MainDashboard::class.java).also {
+                startActivity(it)
+            }
+            finish()
+        }
+
+
         spinnerKategori = findViewById(R.id.spinnerkategori)
+        etPassword = findViewById(R.id.etpassword)
+        ivShowPassword = findViewById(R.id.lihatpassword)
+        ivShowPassword.setOnClickListener {
+            isPasswordVisible = !isPasswordVisible
+            if (isPasswordVisible) {
+                etPassword.inputType = InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                ivShowPassword.setImageResource(R.drawable.eyesclose)
+            } else {
+                etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+                ivShowPassword.setImageResource(R.drawable.eyesopen)
+            }
+            etPassword.setSelection(etPassword.text.length)
+        }
 
         val adapter = object : ArrayAdapter<Kategori>(
             this,
-            R.layout.spinner_item,  // custom item layout
+            R.layout.spinner_item,
             kategoriList
         ) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
