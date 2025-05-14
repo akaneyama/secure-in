@@ -13,6 +13,17 @@
         android:theme="@style/Theme.Securein"
         tools:targetApi="31">
         <activity
+            android:name=".aboutusmenu"
+            android:exported="false" />
+        <activity
+            android:name=".tentangkamimenu"
+            android:exported="false"
+            android:theme="@style/Theme.Securein" />
+        <activity
+            android:name=".menuaboutus"
+            android:exported="false"
+            android:theme="@style/Theme.Securein" />
+        <activity
             android:name=".menutambahdanedit"
             android:exported="false" />
         <activity
