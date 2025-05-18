@@ -3,22 +3,21 @@ package com.daffaadityapurwanto.securein
 import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import com.daffaadityapurwanto.securein.data.Kategori
-
+import kotlin.random.Random
 
 class menutambahdanedit : AppCompatActivity() {
     private lateinit var spinnerKategori: Spinner
     private lateinit var etPassword: EditText
     private lateinit var ivShowPassword: ImageView
     private lateinit var kembalikemain: ImageView
+    private lateinit var generatePassword: LinearLayout
+    private lateinit var passwordStrength: TextView
     private val kategoriList = listOf(
         Kategori("Gmail", R.drawable.logingoogle),
         Kategori("Reddit", R.drawable.logingoogle),
@@ -26,18 +25,20 @@ class menutambahdanedit : AppCompatActivity() {
         Kategori("Free fire", R.drawable.logingoogle)
     )
     private var isPasswordVisible = false
-    override fun onCreate(savedInstanceState: Bundle?) {
 
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_menutambahdanedit)
+
         kembalikemain = findViewById(R.id.buttonkembali)
-        kembalikemain.setOnClickListener{
+        generatePassword = findViewById(R.id.generatepassword)
+        passwordStrength = findViewById(R.id.passwordStrength)
+        kembalikemain.setOnClickListener {
             Intent(this, MainDashboard::class.java).also {
                 startActivity(it)
             }
             finish()
         }
-
 
         spinnerKategori = findViewById(R.id.spinnerkategori)
         etPassword = findViewById(R.id.etpassword)
@@ -52,6 +53,13 @@ class menutambahdanedit : AppCompatActivity() {
                 ivShowPassword.setImageResource(R.drawable.eyesopen)
             }
             etPassword.setSelection(etPassword.text.length)
+        }
+
+        generatePassword.setOnClickListener {
+            val password = generateRandomPassword()
+            etPassword.setText(password)
+            updatePasswordStrength(password)
+            Toast.makeText(this, "Password Generated!", Toast.LENGTH_SHORT).show()
         }
 
         val adapter = object : ArrayAdapter<Kategori>(
@@ -87,10 +95,32 @@ class menutambahdanedit : AppCompatActivity() {
                 parent: AdapterView<*>, view: View?, position: Int, id: Long
             ) {
                 val kategori = kategoriList[position]
-                Toast.makeText(this@menutambahdanedit, "Kategori: ${kategori.nama}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@menutambahdanedit, "Kategori: $kategori.nama}", Toast.LENGTH_SHORT).show()
             }
 
             override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
+    }
+
+    private fun generateRandomPassword(): String {
+        val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#\$%^&*()"
+        return (1..12)
+            .map { Random.nextInt(chars.length) }
+            .map(chars::get)
+            .joinToString("")
+    }
+
+    private fun updatePasswordStrength(password: String) {
+        val strength = getPasswordStrength(password)
+        passwordStrength.text = "Strength: " + strength
+    }
+
+    private fun getPasswordStrength(password: String): String {
+        return when {
+            password.matches(Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%^&*()_+]).{8,}\$")) -> "Strong"
+            password.length < 6 -> "Weak"
+            password.matches(Regex("^(?=.*[a-zA-Z])(?=.*[0-9]).{6,}\$")) -> "Medium"
+            else -> "Weak"
         }
     }
 }

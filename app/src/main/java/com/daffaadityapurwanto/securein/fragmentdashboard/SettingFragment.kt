@@ -12,7 +12,6 @@ import android.widget.Toast
 import com.daffaadityapurwanto.securein.R
 import com.daffaadityapurwanto.securein.aboutusmenu
 import com.daffaadityapurwanto.securein.data.CurrentUser
-import com.daffaadityapurwanto.securein.halamandaftar
 import com.daffaadityapurwanto.securein.halamanlogin
 import java.io.File
 import java.io.FileInputStream
