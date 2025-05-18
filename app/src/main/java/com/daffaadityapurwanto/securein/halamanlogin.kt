@@ -61,7 +61,7 @@ class halamanlogin : AppCompatActivity() {
             }
             val DBhelper = databaseHelper(this)
             val hasilencrypt = encrypt.enkripsi(etPassword.text.toString())
-            val user = DBhelper.loginandcheckuser(etUsername.text.toString(), hasilencrypt)
+            val user = DBhelper.loginandcheckuser(etUsername.text.toString(),etUsername.text.toString(), hasilencrypt)
 
             if(user != null){
                 //Toast.makeText(this, "Selamat datang, ${user.nama}", Toast.LENGTH_SHORT).show()

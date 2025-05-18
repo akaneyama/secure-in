@@ -77,10 +77,10 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
         return SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READWRITE)
     }
 
-    fun loginandcheckuser(username: String, password: String): users? {
+    fun loginandcheckuser(username: String,email: String, password: String): users? {
         val db = openDatabase()
-        val query = "SELECT id_user, uid, kunci_enkripsi, email, nama FROM users WHERE username = ? AND password = ?"
-        val cursor = db.rawQuery(query, arrayOf(username, password))
+        val query = "SELECT id_user, uid, kunci_enkripsi, email, nama FROM users WHERE username = ? OR email = ? AND password = ?"
+        val cursor = db.rawQuery(query, arrayOf(username, email,password))
 
         var user: users? = null
         if (cursor.moveToFirst()) {
@@ -139,5 +139,34 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
         db.close()
 
         return sudahAda
+    }
+
+    fun hitungJumlahPassword(idUser: String): String {
+        val db = this.readableDatabase
+        val query = "SELECT COUNT(*) FROM password_view_lengkap WHERE id_user = ?"
+        val cursor = db.rawQuery(query, arrayOf(idUser))
+
+        var jumlah = "0"
+        if (cursor.moveToFirst()) {
+            jumlah = cursor.getString(0)  // Mengambil nilai hasil COUNT
+        }
+        cursor.close()
+        db.close()
+
+        return jumlah
+    }
+    fun ambildatasinkron(idUser: String): String {
+        val db = this.readableDatabase
+        val query = "SELECT sinkronisasi.tanggal_sinkron FROM password_view_lengkap JOIN sinkronisasi ON password_view_lengkap.id_sinkronisasi = sinkronisasi.id_sinkronisasi WHERE password_view_lengkap.id_user = ? AND password_view_lengkap.status_sinkron = '1' ORDER BY sinkronisasi.tanggal_sinkron LIMIT 1"
+        val cursor = db.rawQuery(query, arrayOf(idUser))
+
+        var jumlah = "0"
+        if (cursor.moveToFirst()) {
+            jumlah = cursor.getString(0)  // Mengambil nilai hasil COUNT
+        }
+        cursor.close()
+        db.close()
+
+        return jumlah
     }
 }
