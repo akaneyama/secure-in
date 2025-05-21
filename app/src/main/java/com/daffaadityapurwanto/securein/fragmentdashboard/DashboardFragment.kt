@@ -19,6 +19,7 @@ class DashboardFragment : Fragment() {
 
     data class NewlyAddedItem(
         val logoResId: Int,
+        val namaakundashboard: String,
         val emailName: String,
         val createdDate: String
     )
@@ -39,10 +40,12 @@ class DashboardFragment : Fragment() {
             val item = dataList[position]
 
             val logo = view.findViewById<ImageView>(R.id.logoItem)
+            val akunnamanyaapa = view.findViewById<TextView>(R.id.akunname)
             val email = view.findViewById<TextView>(R.id.emailName)
             val date = view.findViewById<TextView>(R.id.createdDate)
 
             logo.setImageResource(item.logoResId)
+            akunnamanyaapa.text = item.namaakundashboard
             email.text = item.emailName
             date.text = "Created: ${item.createdDate}"
 
@@ -100,16 +103,17 @@ class DashboardFragment : Fragment() {
     fun getNewlyAddedItems(idUser: Int): List<NewlyAddedItem> {
         val db = databaseHelper(requireContext()).readableDatabase
         val itemList = mutableListOf<NewlyAddedItem>()
-        val query = "SELECT email_password, dibuat_pada FROM password_view_lengkap WHERE id_user = ? ORDER BY dibuat_pada DESC LIMIT 5"
+        val query = "SELECT notes, email_password, dibuat_pada FROM password_view_lengkap WHERE id_user = ? ORDER BY dibuat_pada DESC LIMIT 5 "
         //val query = "SELECT nama_service,email_password, dibuat_pada FROM password_view_lengkap WHERE id_user = ? ORDER BY dibuat_pada DESC LIMIT 5"
         val cursor = db.rawQuery(query, arrayOf(idUser.toString()))
 
         if (cursor.moveToFirst()) {
             do {
                 val logoResId = R.drawable.logingoogle
-                val email = cursor.getString(0)
-                val createdDate = cursor.getString(1)
-                itemList.add(NewlyAddedItem(logoResId, email, createdDate))
+                val namaakunn = cursor.getString(0)
+                val email = cursor.getString(1)
+                val createdDate = cursor.getString(2)
+                itemList.add(NewlyAddedItem(logoResId, namaakunn, email, createdDate))
             } while (cursor.moveToNext())
         }
 
