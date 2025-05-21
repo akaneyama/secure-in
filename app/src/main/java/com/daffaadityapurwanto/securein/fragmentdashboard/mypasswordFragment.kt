@@ -10,9 +10,12 @@ import android.widget.BaseAdapter
 import android.widget.ImageView
 import android.widget.ListView
 import android.widget.TextView
+import android.widget.*
 import com.daffaadityapurwanto.securein.R
 import com.daffaadityapurwanto.securein.data.CurrentUser
 import com.daffaadityapurwanto.securein.data.databaseHelper
+import com.daffaadityapurwanto.securein.encryption.Encrypt
+import com.daffaadityapurwanto.securein.encryption.keyAES
 import com.daffaadityapurwanto.securein.fragmentdashboard.DashboardFragment.NewlyAddedItem
 
 
@@ -43,18 +46,41 @@ class mypasswordFragment : Fragment() {
                 .inflate(R.layout.passwordlistdarimenupassword, parent, false)
 
             val item = dataList[position]
+            val user = CurrentUser.user
+
+
+
 
             val logo = view.findViewById<ImageView>(R.id.logoItem)
             val akunnyanama = view.findViewById<TextView>(R.id.akunname)
             val email = view.findViewById<TextView>(R.id.emailName)
             val date = view.findViewById<TextView>(R.id.createdDate)
+            val btnSalin = view.findViewById<ImageView>(R.id.salin)
+
+
 
 
             logo.setImageResource(item.logoResId)
             akunnyanama.text = item.notes
             email.text = item.emailName
             date.text = "Created: ${item.createdDate}"
+            btnSalin.setOnClickListener {
+                if (user != null) {
 
+                    val kunciAES = keyAES()
+                    val buatkunci = Encrypt(user.kunci_enkripsi,kunciAES.KunciIVKey)
+                    val passwordasli = buatkunci.dekripsi(item.password)
+                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                    val clip = android.content.ClipData.newPlainText("Password", passwordasli)
+                    clipboard.setPrimaryClip(clip)
+
+                    Toast.makeText(context, "Password disalin ke clipboard", Toast.LENGTH_SHORT).show()
+
+                }
+
+
+
+            }
             return view
         }
     }

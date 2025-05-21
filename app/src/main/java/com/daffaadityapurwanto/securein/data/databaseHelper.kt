@@ -128,6 +128,27 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
         db.close()
         return result != -1L
     }
+    fun insertTopasswordDatabase(idUser:String, idService: String, email: String ,username: String, password: String, notes:String ) {
+        val db = this.writableDatabase
+
+        val query = "INSERT INTO password (id_user, id_service, email, username, password, notes) VALUES (?, ?, ?, ?, ?, ?)"
+        val statement = db.compileStatement(query)
+        statement.bindString(1, idUser)
+        statement.bindString(2, idService)
+        statement.bindString(3, email)
+        statement.bindString(4, username)
+        statement.bindString(5, password)
+        statement.bindString(6, notes)
+
+        try {
+            statement.executeInsert()
+
+        } catch (e: Exception) {
+
+        } finally {
+            db.close()
+        }
+    }
 
     fun cekUsernameAtauEmailSudahAda(username: String, email: String): Boolean {
         val db = this.readableDatabase

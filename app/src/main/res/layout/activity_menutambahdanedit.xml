@@ -49,6 +49,7 @@
             android:text="Save"
             android:textSize="20dp"
             android:fontFamily="@font/opensansbold"
+            android:id="@+id/savedatakedatabase"
             android:textColor="@color/unguteks"/>
         
     </LinearLayout>
@@ -98,6 +99,7 @@
             android:src="@drawable/email"/>
 
         <EditText
+            android:id="@+id/ETEmail"
             android:layout_margin="5dp"
             android:background="@null"
             android:layout_width="match_parent"
@@ -130,6 +132,7 @@
             android:src="@drawable/usernamelog"/>
 
         <EditText
+            android:id="@+id/ETUsername"
             android:layout_margin="5dp"
             android:background="@null"
             android:layout_width="match_parent"
@@ -137,7 +140,7 @@
             android:textSize="15dp"
             android:hint="Username"
             android:fontFamily="@font/opensansmedium"
-            android:inputType="textEmailAddress"/>
+            android:inputType="text"/>
 
     </LinearLayout>
 
@@ -268,8 +271,9 @@
             android:layout_height="30dp"
             android:textSize="15dp"
             android:hint="Notes"
+            android:id="@+id/ETNotes"
             android:fontFamily="@font/opensansmedium"
-            android:inputType="textEmailAddress"/>
+            android:inputType="text"/>
 
     </LinearLayout>
 
