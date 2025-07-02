@@ -124,7 +124,7 @@ class mypasswordFragment : Fragment() {
         val cursor = db.rawQuery(query, arrayOf(idUser.toString()))
 
         if (cursor.moveToFirst()) { do{
-            val logoResId = R.drawable.logingoogle
+            val logoResId = R.drawable.privacy
             val id_user = cursor.getString(0)
             val id_service = cursor.getString(1)
             val id_password = cursor.getString(2)
