@@ -17,6 +17,8 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.security.SecureRandom
 import android.util.Base64
+import com.daffaadityapurwanto.securein.R
+import com.daffaadityapurwanto.securein.fragmentdashboard.mypasswordFragment
 
 
 class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
@@ -27,6 +29,47 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
         }
 
         private val dbPath: String = context.getDatabasePath(DATABASE_NAME).path
+
+    // Letakkan fungsi ini di dalam class databaseHelper
+
+    fun searchMyPasswords(idUser: String, searchText: String): List<mypasswordFragment.ItemPassword> {
+        val db = this.readableDatabase
+        val itemList = mutableListOf<mypasswordFragment.ItemPassword>()
+
+        // Query untuk mencari di kolom 'notes' (nama layanan) dan 'email_password'
+        val query = """
+        SELECT id_user, id_service, id_password, notes, email_password, username_password, password_password, dibuat_pada 
+        FROM password_view_lengkap 
+        WHERE id_user = ? AND (notes LIKE ? OR email_password LIKE ?)
+    """.trimIndent()
+
+        // Tanda '%' adalah wildcard untuk pencarian teks
+        val cursor = db.rawQuery(query, arrayOf(idUser, "%$searchText%", "%$searchText%"))
+
+        if (cursor.moveToFirst()) {
+            do {
+                val logoResId = R.drawable.privacy
+                val id_user = cursor.getString(0)
+                val id_service = cursor.getString(1)
+                val id_password = cursor.getString(2)
+                val notes = cursor.getString(3)
+                val email_password = cursor.getString(4)
+                val username_password = cursor.getString(5)
+                val password_password = cursor.getString(6)
+                val tangggaldibuat = cursor.getString(7)
+                itemList.add(
+                    mypasswordFragment.ItemPassword(
+                        logoResId, id_user, id_service, id_password, notes,
+                        email_password, username_password, password_password, tangggaldibuat
+                    )
+                )
+            } while (cursor.moveToNext())
+        }
+
+        cursor.close()
+        db.close()
+        return itemList
+    }
 
     fun copyDatabaseIfNeeded(context: Context) {
         val databaseFile = context.getDatabasePath("secureindb.db")
