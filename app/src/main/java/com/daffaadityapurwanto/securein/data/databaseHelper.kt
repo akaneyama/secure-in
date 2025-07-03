@@ -32,6 +32,54 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
 
     // Letakkan fungsi ini di dalam class databaseHelper
 
+    // Tambahkan 3 fungsi ini di dalam class databaseHelper
+
+    fun deletePasswordById(idPassword: String): Int {
+        val db = this.writableDatabase
+        val result = db.delete("password", "id_password = ?", arrayOf(idPassword))
+        db.close()
+        return result
+    }
+
+    // Tambahkan 2 fungsi ini di dalam class databaseHelper
+
+    fun getPasswordDetails(idPassword: String): com.daffaadityapurwanto.securein.fragmentdashboard.mypasswordFragment.ItemPassword? {
+        val db = this.readableDatabase
+        var item: com.daffaadityapurwanto.securein.fragmentdashboard.mypasswordFragment.ItemPassword? = null
+        val query = "SELECT id_user, id_service, id_password, notes, email_password, username_password, password_password, dibuat_pada FROM password_view_lengkap WHERE id_password = ?"
+        val cursor = db.rawQuery(query, arrayOf(idPassword))
+
+        if (cursor.moveToFirst()) {
+            item = com.daffaadityapurwanto.securein.fragmentdashboard.mypasswordFragment.ItemPassword(
+                logoResId = R.drawable.privacy, // Ikon default
+                iduserpassword = cursor.getString(0),
+                idservice = cursor.getString(1),
+                idpassword = cursor.getString(2),
+                notes = cursor.getString(3),
+                emailName = cursor.getString(4),
+                username = cursor.getString(5),
+                password = cursor.getString(6),
+                createdDate = cursor.getString(7)
+            )
+        }
+        cursor.close()
+        db.close()
+        return item
+    }
+
+    fun updatePassword(idPassword: String, idService: String, email: String, username: String, newEncryptedPass: String, notes: String): Int {
+        val db = this.writableDatabase
+        val values = ContentValues().apply {
+            put("id_service", idService)
+            put("email", email)
+            put("username", username)
+            put("password", newEncryptedPass)
+            put("notes", notes)
+        }
+        val result = db.update("password", values, "id_password = ?", arrayOf(idPassword))
+        db.close()
+        return result
+    }
     fun searchMyPasswords(idUser: String, searchText: String): List<mypasswordFragment.ItemPassword> {
         val db = this.readableDatabase
         val itemList = mutableListOf<mypasswordFragment.ItemPassword>()

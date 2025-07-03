@@ -1,31 +1,32 @@
 package com.daffaadityapurwanto.securein.fragmentdashboard
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import android.Manifest // Import baru
 import android.view.LayoutInflater
 import android.view.View
-import android.content.pm.PackageManager // Import baru
-import android.os.Build // Import baru
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.ImageView
 import android.widget.ListView
 import android.widget.TextView
-import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import com.daffaadityapurwanto.securein.R
 import com.daffaadityapurwanto.securein.data.CurrentUser
+import com.daffaadityapurwanto.securein.data.NotificationHelper
 import com.daffaadityapurwanto.securein.data.databaseHelper
 import java.time.LocalTime
-import androidx.activity.result.contract.ActivityResultContracts // Import baru
-import androidx.core.content.ContextCompat // Import baru
-import com.daffaadityapurwanto.securein.data.NotificationHelper // Import baru
-
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 
 class DashboardFragment : Fragment() {
 
+    // ... (Data Class NewlyAddedItem ada di sini) ...
     data class NewlyAddedItem(
         val logoResId: Int,
         val namaakundashboard: String,
@@ -33,51 +34,109 @@ class DashboardFragment : Fragment() {
         val createdDate: String
     )
 
-    public class NewlyAddedAdapter(
+    // ... (Class NewlyAddedAdapter yang sudah dimodifikasi ada di sini) ...
+    class NewlyAddedAdapter(
         private val context: Context,
-        private val dataList: List<NewlyAddedItem>
+        private var dataList: MutableList<NewlyAddedItem>
     ) : BaseAdapter() {
-
         override fun getCount(): Int = dataList.size
         override fun getItem(position: Int): Any = dataList[position]
         override fun getItemId(position: Int): Long = position.toLong()
-
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
             val view = convertView ?: LayoutInflater.from(context)
                 .inflate(R.layout.item_newly_addeddaridashboard, parent, false)
-
             val item = dataList[position]
-
             val logo = view.findViewById<ImageView>(R.id.logoItem)
             val akunnamanyaapa = view.findViewById<TextView>(R.id.akunname)
             val email = view.findViewById<TextView>(R.id.emailName)
             val date = view.findViewById<TextView>(R.id.createdDate)
-
             logo.setImageResource(item.logoResId)
             akunnamanyaapa.text = item.namaakundashboard
             email.text = item.emailName
             date.text = "Created: ${item.createdDate}"
-
             return view
+        }
+
+        fun updateData(newList: List<NewlyAddedItem>) {
+            dataList.clear()
+            dataList.addAll(newList)
+            notifyDataSetChanged()
         }
     }
 
+
+    // --- Deklarasi Properti Kelas ---
     private lateinit var goodmorning: TextView
     private lateinit var angkapasswordtotal: TextView
     private lateinit var namauser: TextView
     private lateinit var todayyysinkron: TextView
+    private lateinit var listView: ListView
+    private lateinit var adapter: NewlyAddedAdapter
+    private lateinit var dbHelper: databaseHelper
+
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-            if (isGranted) {
-                // Izin diberikan oleh pengguna.
-                //Toast.makeText(requireContext(), "Izin notifikasi diberikan.", Toast.LENGTH_SHORT).show()
-                // Anda bisa langsung menampilkan notifikasi di sini jika mau
-                // NotificationHelper.showExpirationWarningNotification(requireContext(), 5)
-            } else {
-                // Izin ditolak. Beri tahu pengguna.
-                //Toast.makeText(requireContext(), "Izin notifikasi ditolak.", Toast.LENGTH_SHORT).show()
-            }
+            // Handle hasil izin di sini jika diperlukan
         }
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inisialisasi helper sekali saja
+        dbHelper = databaseHelper(requireContext())
+        return inflater.inflate(R.layout.fragment_dashboard, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // --- Setup satu kali (inisialisasi view dan listener) ---
+        goodmorning = view.findViewById(R.id.ucapanselamat)
+        angkapasswordtotal = view.findViewById(R.id.angkatotalpassworddashboard)
+        namauser = view.findViewById(R.id.namauser)
+        todayyysinkron = view.findViewById(R.id.todayyysinkron)
+        listView = view.findViewById(R.id.listViewNewlyAdded)
+
+        // Inisialisasi adapter dengan list kosong, data akan diisi nanti
+        adapter = NewlyAddedAdapter(requireContext(), mutableListOf())
+        listView.adapter = adapter
+
+        askForNotificationPermission()
+
+        val notificationIcon = view.findViewById<ImageView>(R.id.notification)
+        notificationIcon.setOnClickListener {
+            NotificationHelper.createNotificationChannel(requireContext())
+            NotificationHelper.showExpirationWarningNotification(requireContext(), 5)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Panggil fungsi refresh data setiap kali fragment ini kembali aktif
+        refreshDashboardData()
+    }
+
+    private fun refreshDashboardData() {
+        // --- Logika untuk memuat ulang semua data dashboard ---
+        setGreeting()
+        val user = CurrentUser.user
+        if (user != null) {
+            namauser.text = user.nama
+            todayyysinkron.text = dbHelper.ambildatasinkron(user.id_user.toString())
+
+            angkapasswordtotal.text = dbHelper.hitungJumlahPassword(user.id_user.toString())
+
+            // Ambil data terbaru untuk list dan update adapter
+            val dataList = getNewlyAddedItems(user.id_user)
+            adapter.updateData(dataList)
+        } else {
+            angkapasswordtotal.text = "User tidak ditemukan"
+            namauser.text = "Guest"
+            adapter.updateData(emptyList()) // Kosongkan list jika user tidak ada
+        }
+    }
+
     private fun setGreeting() {
         val now = LocalTime.now()
         val greeting = when (now.hour) {
@@ -89,90 +148,25 @@ class DashboardFragment : Fragment() {
         goodmorning.text = greeting
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_dashboard, container, false)
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        val dbHelper = databaseHelper(requireContext())
-        goodmorning = view.findViewById(R.id.ucapanselamat)
-        angkapasswordtotal = view.findViewById(R.id.angkatotalpassworddashboard)
-        namauser = view.findViewById(R.id.namauser)
-        todayyysinkron = view.findViewById(R.id.todayyysinkron)
-        setGreeting()
-        askForNotificationPermission()
-        val notificationIcon = view.findViewById<ImageView>(R.id.notification)
-        notificationIcon.setOnClickListener {
-            // Kode di dalam blok ini akan dijalankan saat ikon diklik
-
-            // a. Pastikan Notification Channel sudah dibuat
-            NotificationHelper.createNotificationChannel(requireContext())
-
-            // b. Panggil fungsi untuk menampilkan notifikasi (dengan angka 5 sebagai contoh)
-            NotificationHelper.showExpirationWarningNotification(requireContext(), 5)
-        }
-        val user = CurrentUser.user
-        if (user != null) {
-            namauser.text = user.nama
-            todayyysinkron.text = dbHelper.ambildatasinkron(user.id_user.toString())
-            angkapasswordtotal.text = dbHelper.hitungJumlahPassword(user.id_user.toString())
-
-            val listView = view.findViewById<ListView>(R.id.listViewNewlyAdded)
-            val dataList = getNewlyAddedItems(user.id_user)
-            val adapter = NewlyAddedAdapter(requireContext(), dataList)
-            listView.adapter = adapter
-        } else {
-            angkapasswordtotal.text = "User tidak ditemukan"
-        }
-    }
     private fun askForNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Cek untuk Android 13+
-            when {
-                ContextCompat.checkSelfPermission(
-                    requireContext(),
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) == PackageManager.PERMISSION_GRANTED -> {
-                    // Izin sudah ada, langsung cek
-
-                }
-                shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> {
-                    // Anda bisa menampilkan dialog penjelasan mengapa Anda butuh izin ini
-                    // Untuk saat ini, kita langsung minta saja
-                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                }
-                else -> {
-                    // Langsung minta izin
-                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
     }
+
     fun getNewlyAddedItems(idUser: Int): List<NewlyAddedItem> {
-        val db = databaseHelper(requireContext()).readableDatabase
         val itemList = mutableListOf<NewlyAddedItem>()
         val query = "SELECT notes, email_password, dibuat_pada FROM password_view_lengkap WHERE id_user = ? ORDER BY dibuat_pada DESC LIMIT 5 "
-        //val query = "SELECT nama_service,email_password, dibuat_pada FROM password_view_lengkap WHERE id_user = ? ORDER BY dibuat_pada DESC LIMIT 5"
-        val cursor = db.rawQuery(query, arrayOf(idUser.toString()))
-
+        val cursor = dbHelper.readableDatabase.rawQuery(query, arrayOf(idUser.toString()))
         if (cursor.moveToFirst()) {
             do {
-                val logoResId = R.drawable.privacy
-                val namaakunn = cursor.getString(0)
-                val email = cursor.getString(1)
-                val createdDate = cursor.getString(2)
-                itemList.add(NewlyAddedItem(logoResId, namaakunn, email, createdDate))
+                itemList.add(NewlyAddedItem(R.drawable.privacy, cursor.getString(0), cursor.getString(1), cursor.getString(2)))
             } while (cursor.moveToNext())
         }
-
         cursor.close()
-        db.close()
-
+        // Tidak perlu db.close() jika menggunakan instance dbHelper dari kelas
         return itemList
     }
-
 }
-
