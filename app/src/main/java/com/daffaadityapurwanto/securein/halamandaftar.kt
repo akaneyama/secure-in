@@ -58,13 +58,11 @@ class halamandaftar : AppCompatActivity() {
         setupListeners()
         val emailToVerify = intent.getStringExtra("VERIFY_EMAIL")
         if (emailToVerify != null) {
-            // Langsung tampilkan form OTP
             showVerificationView(true)
-            // Isi dan kunci kolom email
             email.setText(emailToVerify)
-            email.isEnabled = false
-            // Sembunyikan tombol login kembali agar tidak membingungkan
-            loginkembali.visibility = View.GONE
+            email.isEnabled = false // Kunci field email
+            loginkembali.visibility = View.GONE // Sembunyikan tombol kembali ke login
+
         }
     }
 

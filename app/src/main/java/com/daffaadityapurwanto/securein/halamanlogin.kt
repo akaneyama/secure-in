@@ -81,7 +81,7 @@ class halamanlogin : AppCompatActivity() {
             }
 
             Toast.makeText(this, "Mencoba login...", Toast.LENGTH_SHORT).show()
-            Log.d("LoginProcess", "Tombol login ditekan. Memulai validasi untuk user: $usernameStr")
+            Log.d("LoginVerifyProcess", "Tombol login ditekan untuk user: $usernameStr")
 
             lifecycleScope.launch(Dispatchers.IO) {
                 try {
@@ -90,43 +90,47 @@ class halamanlogin : AppCompatActivity() {
                     val encrypt = Encrypt(kunciAES.KunciAES128, kunciAES.KunciIVKey)
                     val hasilencrypt = encrypt.enkripsi(passwordStr)
 
-                    Log.d("LoginProcess", "Mencoba login lokal di background thread...")
+                    Log.d("LoginVerifyProcess", "Mencoba login lokal...")
                     val localUser = dbHelper.loginandcheckuser(usernameStr, usernameStr, hasilencrypt)
 
                     if (localUser != null) {
-                        Log.d("LoginProcess", "Login lokal BERHASIL untuk user ID: ${localUser.id_user}")
+                        Log.d("LoginVerifyProcess", "SUKSES: Login lokal berhasil untuk user ID: ${localUser.id_user}")
                         withContext(Dispatchers.Main) {
                             saveLoginStatus(true, localUser.id_user)
                             goToDashboard()
                         }
                     } else {
-                        Log.d("LoginProcess", "Login lokal GAGAL. Mencoba login via server...")
+                        Log.d("LoginVerifyProcess", "INFO: Login lokal gagal, mencoba via server...")
                         val request = LoginRequest(username = usernameStr, passwordEncrypted = hasilencrypt)
                         val response = RetrofitClient.instance.loginUser(request)
 
-                        Log.d("LoginProcess", "Respons server diterima. Kode: ${response.code()}, Pesan: ${response.message()}")
+                        Log.d("LoginVerifyProcess", "INFO: Respons server diterima. Kode: ${response.code()}")
 
-                        val userFromServer = response.body()
-
-                        if (response.isSuccessful && userFromServer != null) {
-                            Log.d("LoginProcess", "Login server BERHASIL. Menyimpan data user ID: ${userFromServer.id_user} ke lokal.")
-                            dbHelper.insertOrUpdateUser(userFromServer)
-
-                            withContext(Dispatchers.Main) {
+                        withContext(Dispatchers.Main) {
+                            if (response.isSuccessful) {
+                                Log.d("LoginVerifyProcess", "SUKSES: Login server berhasil (Kode 200).")
+                                val userFromServer = response.body()!!
+                                dbHelper.insertOrUpdateUser(userFromServer)
                                 saveLoginStatus(true, userFromServer.id_user)
                                 goToDashboard()
-                            }
-                        } else {
-                            Log.w("LoginProcess", "Login server GAGAL. Server merespons dengan error.")
-                            withContext(Dispatchers.Main) {
+
+                            } else if (response.code() == 403) {
+                                Log.w("LoginVerifyProcess", "PERINGATAN: Login gagal (Kode 403), akun belum diverifikasi. Mengarahkan ke halaman verifikasi.")
+                                Toast.makeText(this@halamanlogin, "Akun belum aktif. Cek email untuk verifikasi.", Toast.LENGTH_LONG).show()
+
+                                val intent = Intent(this@halamanlogin, halamandaftar::class.java).apply {
+                                    putExtra("VERIFY_EMAIL", usernameStr)
+                                }
+                                startActivity(intent)
+
+                            } else {
+                                Log.w("LoginVerifyProcess", "GAGAL: Login server gagal (Kode ${response.code()}). Kredensial salah atau error lain.")
                                 showCustomDialog("wrong_password")
                             }
                         }
                     }
                 } catch (e: Exception) {
-                    // Blok catch ini akan menangkap semua jenis error, termasuk koneksi
-                    Log.e("LoginProcess", "Terjadi EXCEPTION saat proses login:", e)
-
+                    Log.e("LoginVerifyProcess", "EXCEPTION: Terjadi error saat proses login:", e)
                     withContext(Dispatchers.Main) {
                         Toast.makeText(this@halamanlogin, "Login gagal. Periksa koneksi atau kredensial Anda.", Toast.LENGTH_LONG).show()
                     }

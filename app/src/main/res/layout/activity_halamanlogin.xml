@@ -31,7 +31,7 @@
                 android:id="@+id/statuslogin"
                 android:layout_width="280dp"
                 android:layout_height="25dp"
-                android:layout_marginTop="240dp"
+                android:layout_marginTop="140dp"
                 android:layout_marginBottom="5dp"
                 android:shadowRadius="5"
                 android:text=""
@@ -50,19 +50,9 @@
                 android:textSize="16dp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="30dp"
-                android:layout_marginTop="10dp"
-                android:fontFamily="@font/opensansmediumitalic"
-                android:text="- Or Login With -" />
 
-            <ImageView
-                android:id="@+id/btnlogingoogle"
-                android:layout_width="25dp"
-                android:layout_height="25dp"
-                android:layout_marginTop="10dp"
-                app:srcCompat="@drawable/logingoogle" />
+
+
 
             <LinearLayout
                 android:layout_width="wrap_content"

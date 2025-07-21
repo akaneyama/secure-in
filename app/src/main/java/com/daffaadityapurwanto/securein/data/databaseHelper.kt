@@ -73,18 +73,19 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
 
     fun getUserDetails(userId: Int): users? {
         val db = this.readableDatabase
-        // UBAH QUERY: Ambil semua kolom yang dibutuhkan
         val cursor = db.rawQuery("SELECT id_user, uid, kunci_enkripsi, email, nama, username, password, is_verified FROM users WHERE id_user = ?", arrayOf(userId.toString()))
         var user: users? = null
+
         if (cursor.moveToFirst()) {
             user = users(
                 id_user = cursor.getInt(cursor.getColumnIndexOrThrow("id_user")),
-                uid = cursor.getString(cursor.getColumnIndexOrThrow("uid")),
-                kunci_enkripsi = cursor.getString(cursor.getColumnIndexOrThrow("kunci_enkripsi")),
-                email = cursor.getString(cursor.getColumnIndexOrThrow("email")),
-                nama = cursor.getString(cursor.getColumnIndexOrThrow("nama")),
-                username = cursor.getString(cursor.getColumnIndexOrThrow("username")),
-                password = cursor.getString(cursor.getColumnIndexOrThrow("password")),
+                // Gunakan '?: ""' untuk memberikan nilai default string kosong jika data di DB null
+                uid = cursor.getString(cursor.getColumnIndexOrThrow("uid")) ?: "0",
+                kunci_enkripsi = cursor.getString(cursor.getColumnIndexOrThrow("kunci_enkripsi")) ?: "",
+                email = cursor.getString(cursor.getColumnIndexOrThrow("email")) ?: "",
+                nama = cursor.getString(cursor.getColumnIndexOrThrow("nama")) ?: "",
+                username = cursor.getString(cursor.getColumnIndexOrThrow("username")) ?: "",
+                password = cursor.getString(cursor.getColumnIndexOrThrow("password")) ?: "",
                 is_verified = cursor.getInt(cursor.getColumnIndexOrThrow("is_verified"))
             )
         }

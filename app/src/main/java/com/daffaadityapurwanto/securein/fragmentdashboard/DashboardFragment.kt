@@ -23,7 +23,9 @@ import java.time.LocalTime
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-
+import android.util.Log // Jangan lupa tambahkan import ini
+import android.widget.Toast
+import kotlinx.coroutines.withContext
 
 class DashboardFragment : Fragment() {
 
@@ -118,42 +120,36 @@ class DashboardFragment : Fragment() {
     }
 
     private fun refreshDashboardData() {
-        // --- Logika untuk memuat ulang semua data dashboard ---
         setGreeting()
-
-        // Ambil ID user dari SharedPreferences sebagai sumber kebenaran utama
         val sharedPref = requireActivity().getSharedPreferences("LoginPrefs", Context.MODE_PRIVATE)
         val loggedInUserId = sharedPref.getInt("userId", -1)
 
         if (loggedInUserId != -1) {
-            // Gunakan Coroutine untuk menjalankan operasi database di background thread
             viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                // Ambil semua data dari DB di sini
-                val user = dbHelper.getUserDetails(loggedInUserId) // Anda perlu membuat fungsi ini di dbHelper
-                val syncData = dbHelper.getLastSuccessfulSyncTimestamp()
-                val passwordCount = dbHelper.hitungJumlahPassword(loggedInUserId.toString())
-                val newlyAddedItems = getNewlyAddedItems(loggedInUserId)
+                try { // --- Mulai blok try ---
+                    val user = dbHelper.getUserDetails(loggedInUserId)
+                    val syncData = dbHelper.getLastSuccessfulSyncTimestamp()
+                    val passwordCount = dbHelper.hitungJumlahPassword(loggedInUserId.toString())
+                    val newlyAddedItems = getNewlyAddedItems(loggedInUserId)
 
-                // Setelah data siap, kembali ke UI Thread untuk memperbarui tampilan
-                launch(Dispatchers.Main) {
-                    if (user != null) {
-                        namauser.text = user.nama
-                    } else {
-                        namauser.text = "Guest"
+                    // Kembali ke UI Thread untuk memperbarui tampilan
+                    withContext(Dispatchers.Main) {
+                        namauser.text = user?.nama ?: "Guest"
+                        todayyysinkron.text = syncData ?: "Belum pernah"
+                        angkapasswordtotal.text = passwordCount
+                        adapter.updateData(newlyAddedItems)
                     }
-                    todayyysinkron.text = syncData
-                    angkapasswordtotal.text = passwordCount
-                    adapter.updateData(newlyAddedItems)
+                } catch (e: Exception) { // --- Blok catch untuk menangkap error ---
+                    Log.e("DashboardError", "Gagal memuat data dashboard:", e)
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(requireContext(), "Gagal memuat data dashboard.", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         } else {
-            // Kondisi jika user tidak ditemukan di SharedPreferences
-            angkapasswordtotal.text = "User tidak ditemukan"
-            namauser.text = "Guest"
-            adapter.updateData(emptyList()) // Kosongkan list
+            // ... (bagian ini sudah benar)
         }
     }
-
     private fun setGreeting() {
         val now = LocalTime.now()
         val greeting = when (now.hour) {
