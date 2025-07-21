@@ -7,9 +7,11 @@ import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -18,8 +20,7 @@ import androidx.lifecycle.lifecycleScope
 import com.daffaadityapurwanto.securein.data.databaseHelper
 import com.daffaadityapurwanto.securein.encryption.Encrypt
 import com.daffaadityapurwanto.securein.encryption.keyAES
-import com.daffaadityapurwanto.securein.network.RegisterRequest
-import com.daffaadityapurwanto.securein.network.RetrofitClient
+import com.daffaadityapurwanto.securein.network.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -27,28 +28,49 @@ import kotlinx.coroutines.withContext
 class halamandaftar : AppCompatActivity() {
 
     // --- Deklarasi Variabel ---
+    private lateinit var registrationLayout: LinearLayout
+    private lateinit var verificationLayout: LinearLayout
     private lateinit var etPassword: EditText
     private lateinit var etRetypePassword: EditText
     private lateinit var togglePassword: ImageView
     private lateinit var toggleRetype: ImageView
     private lateinit var passwordStrength: TextView
     private lateinit var passwordMatch: TextView
-    private lateinit var loginkembali: TextView
     private lateinit var username: EditText
     private lateinit var name: EditText
     private lateinit var email: EditText
     private lateinit var daftar: Button
+    private lateinit var etOtp: EditText
+    private lateinit var btnVerifikasi: Button
+    private lateinit var loginkembali: TextView
+
     private var currentPasswordStrength = ""
     private var isPasswordVisible = false
     private var isRetypeVisible = false
-    private lateinit var dbHelper: databaseHelper // Gunakan satu instance saja
+    private lateinit var dbHelper: databaseHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_halamandaftar)
 
-        // Inisialisasi properti kelas
         dbHelper = databaseHelper(this)
+        initializeViews()
+        setupListeners()
+        val emailToVerify = intent.getStringExtra("VERIFY_EMAIL")
+        if (emailToVerify != null) {
+            // Langsung tampilkan form OTP
+            showVerificationView(true)
+            // Isi dan kunci kolom email
+            email.setText(emailToVerify)
+            email.isEnabled = false
+            // Sembunyikan tombol login kembali agar tidak membingungkan
+            loginkembali.visibility = View.GONE
+        }
+    }
+
+    private fun initializeViews() {
+        registrationLayout = findViewById(R.id.registrationLayout)
+        verificationLayout = findViewById(R.id.verificationLayout)
         loginkembali = findViewById(R.id.btnloginkembali)
         etPassword = findViewById(R.id.et_password)
         etRetypePassword = findViewById(R.id.et_passwordretype)
@@ -60,66 +82,36 @@ class halamandaftar : AppCompatActivity() {
         name = findViewById(R.id.et_nama)
         email = findViewById(R.id.et_email)
         daftar = findViewById(R.id.btn_daftarin)
-
-        // Setup semua listener
-        setupListeners()
+        etOtp = findViewById(R.id.et_otp)
+        btnVerifikasi = findViewById(R.id.btn_verifikasi)
     }
 
     private fun setupListeners() {
-        daftar.setOnClickListener {
-            performRegistration()
-        }
+        daftar.setOnClickListener { requestOtp() }
+        btnVerifikasi.setOnClickListener { verifyOtp() }
+        loginkembali.setOnClickListener { goToLogin() }
 
-        loginkembali.setOnClickListener {
-            goToLogin()
-        }
-
-        // ... (Listener lain tidak berubah) ...
-        // Toggle visibility untuk password
         togglePassword.setOnClickListener {
             isPasswordVisible = !isPasswordVisible
-            if (isPasswordVisible) {
-                etPassword.inputType = InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-                togglePassword.setImageResource(R.drawable.eyesclose)
-            } else {
-                etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-                togglePassword.setImageResource(R.drawable.eyesopen)
-            }
-            etPassword.setSelection(etPassword.text.length)
+            toggleVisibility(etPassword, togglePassword, isPasswordVisible)
         }
-        // Toggle visibility untuk retype password
+
         toggleRetype.setOnClickListener {
             isRetypeVisible = !isRetypeVisible
-            if (isRetypeVisible) {
-                etRetypePassword.inputType = InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-                toggleRetype.setImageResource(R.drawable.eyesclose)
-            } else {
-                etRetypePassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-                toggleRetype.setImageResource(R.drawable.eyesopen)
-            }
-            etRetypePassword.setSelection(etRetypePassword.text.length)
+            toggleVisibility(etRetypePassword, toggleRetype, isRetypeVisible)
         }
-        // Validasi kekuatan password
+
         etPassword.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 val password = s.toString()
-                val strength = getPasswordStrength(password)
-                passwordStrength.text = "Strength: $strength"
-                currentPasswordStrength = strength
-                passwordStrength.setTextColor(
-                    when (strength) {
-                        "Weak" -> Color.RED
-                        "Medium" -> Color.parseColor("#FFA500")
-                        "Strong" -> Color.GREEN
-                        else -> Color.GRAY
-                    }
-                )
+                currentPasswordStrength = getPasswordStrength(password)
+                updatePasswordStrengthUI(currentPasswordStrength)
                 checkPasswordMatch()
             }
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
-        // Validasi kecocokan password dan retype
+
         etRetypePassword.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 checkPasswordMatch()
@@ -129,57 +121,109 @@ class halamandaftar : AppCompatActivity() {
         })
     }
 
-    private fun performRegistration() {
-        // ... (kode validasi input Anda tetap di sini) ...
-        val emailStr = email.text.toString()
-        val nameStr = name.text.toString()
-        val usernameStr = username.text.toString()
-        val passwordStr = etPassword.text.toString()
+    private fun showVerificationView(show: Boolean) {
+        if (show) {
+            registrationLayout.visibility = View.GONE
+            verificationLayout.visibility = View.VISIBLE
+        } else {
+            registrationLayout.visibility = View.VISIBLE
+            verificationLayout.visibility = View.GONE
+        }
+    }
 
-        // Proses registrasi sekarang terjadi di background
+    private fun requestOtp() {
+        val emailStr = email.text.toString().trim()
+        val nameStr = name.text.toString().trim()
+        val usernameStr = username.text.toString().trim()
+        val passwordStr = etPassword.text.toString()
+        val retypePasswordStr = etRetypePassword.text.toString()
+
+        // Validasi input
+        if (emailStr.isBlank() || nameStr.isBlank() || usernameStr.isBlank() || passwordStr.isBlank()) {
+            showCustomDialog("field_kosong")
+            return
+        }
+        if (passwordStr != retypePasswordStr) {
+            showCustomDialog("wrong_password")
+            return
+        }
+        if (!emailStr.contains("@")) {
+            showCustomDialog("harusada_@")
+            return
+        }
+        if (currentPasswordStrength == "Weak") {
+            showCustomDialog("password_lemah")
+            return
+        }
+
+        Toast.makeText(this, "Mengirim kode verifikasi...", Toast.LENGTH_SHORT).show()
+
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                // Kita mengenkripsi password sekali di sini
                 val kunciAES = keyAES()
                 val encryptor = Encrypt(kunciAES.KunciAES128, kunciAES.KunciIVKey)
                 val encryptedPassword = encryptor.enkripsi(passwordStr)
                 val randomEncryptionKey = dbHelper.generateRandomKeyString()
 
-                // 1. Siapkan data untuk dikirim ke server (TANPA userId)
-                val request = RegisterRequest(
-                    kunciEnkripsi = randomEncryptionKey,
+                val request = OtpRequest(
                     email = emailStr,
                     nama = nameStr,
                     username = usernameStr,
-                    passwordEncrypted = encryptedPassword
+                    passwordEncrypted = encryptedPassword,
+                    kunciEnkripsi = randomEncryptionKey
                 )
-
-                // 2. Panggil API untuk mendaftar di server
-                val response = RetrofitClient.instance.registerUser(request)
-                val responseBody = response.body()
+                val response = RetrofitClient.instance.requestOtp(request)
 
                 withContext(Dispatchers.Main) {
-                    if (response.isSuccessful && responseBody != null && responseBody.status == "success") {
-                        // 3. Jika di server sukses, ambil ID baru
-                        val newUserId = responseBody.userId
-                        if (newUserId != null) {
-                            // 4. BARU SIMPAN KE DATABASE LOKAL dengan ID dari server
-                            // Kita kirim password yang belum di-enkripsi agar helper bisa mengenkripsi ulang dengan kunci unik user yang baru dibuat
-                            dbHelper.tambahkanUser(newUserId, emailStr, nameStr, usernameStr, passwordStr)
-                            showCustomDialog("berhasil_daftar")
-                        } else {
-                            // Error dari server: tidak ada user_id yang dikembalikan
-                            showCustomDialog("error_server_id") // Anda bisa buat dialog error baru untuk ini
-                        }
+                    if (response.isSuccessful) {
+                        Toast.makeText(this@halamandaftar, "Kode OTP telah dikirim ke email Anda.", Toast.LENGTH_LONG).show()
+                        showVerificationView(true)
                     } else {
-                        // Tampilkan pesan error dari server jika ada
-                        val errorMessage = responseBody?.message ?: "Registrasi server gagal"
-                        Toast.makeText(this@halamandaftar, "Gagal: $errorMessage", Toast.LENGTH_LONG).show()
+                        val errorMsg = "Email/Username mungkin sudah terdaftar."
+                        Toast.makeText(this@halamandaftar, "Gagal: $errorMsg", Toast.LENGTH_LONG).show()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@halamandaftar, "Error: Tidak bisa terhubung ke server. ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@halamandaftar, "Error: Tidak bisa terhubung ke server.", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private fun verifyOtp() {
+        val emailStr = email.text.toString().trim()
+        val otpStr = etOtp.text.toString().trim()
+
+        if (otpStr.length != 6) {
+            Toast.makeText(this, "Kode OTP harus 6 digit.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        Toast.makeText(this, "Memverifikasi kode...", Toast.LENGTH_SHORT).show()
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val request = OtpVerificationRequest(email = emailStr, otp = otpStr)
+                val response = RetrofitClient.instance.verifyOtp(request)
+                val body = response.body()
+
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful && body?.status == "success") {
+                        val userData = body.userData
+                        if (userData != null) {
+                            dbHelper.insertOrUpdateUser(userData)
+                            showCustomDialog("berhasil_daftar")
+                        } else {
+                            Toast.makeText(this@halamandaftar, "Gagal: Respons server tidak valid.", Toast.LENGTH_LONG).show()
+                        }
+                    } else {
+                        val errorMsg = body?.message ?: "Verifikasi gagal."
+                        Toast.makeText(this@halamandaftar, "Gagal: $errorMsg", Toast.LENGTH_LONG).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@halamandaftar, "Error: Tidak bisa terhubung ke server.", Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -192,7 +236,29 @@ class halamandaftar : AppCompatActivity() {
         finish()
     }
 
-    // ... (Fungsi getPasswordStrength dan checkPasswordMatch tidak berubah) ...
+    private fun toggleVisibility(editText: EditText, imageView: ImageView, isVisible: Boolean) {
+        if (isVisible) {
+            editText.inputType = InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+            imageView.setImageResource(R.drawable.eyesclose)
+        } else {
+            editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            imageView.setImageResource(R.drawable.eyesopen)
+        }
+        editText.setSelection(editText.text.length)
+    }
+
+    private fun updatePasswordStrengthUI(strength: String) {
+        passwordStrength.text = "Strength: $strength"
+        passwordStrength.setTextColor(
+            when (strength) {
+                "Weak" -> Color.RED
+                "Medium" -> Color.parseColor("#FFA500")
+                "Strong" -> Color.GREEN
+                else -> Color.GRAY
+            }
+        )
+    }
+
     private fun getPasswordStrength(password: String): String {
         return when {
             password.matches(Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%^&*()_+]).{8,}$")) -> "Strong"
@@ -201,6 +267,7 @@ class halamandaftar : AppCompatActivity() {
             else -> "Weak"
         }
     }
+
     private fun checkPasswordMatch() {
         val password = etPassword.text.toString()
         val retype = etRetypePassword.text.toString()
@@ -219,54 +286,35 @@ class halamandaftar : AppCompatActivity() {
     private fun showCustomDialog(status: String) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.logindialog_status, null)
         val alertDialog = AlertDialog.Builder(this).setView(dialogView).create()
-
         val imgStatus = dialogView.findViewById<ImageView>(R.id.imgStatus)
         val txtStatus = dialogView.findViewById<TextView>(R.id.txtStatus)
         val btnOk = dialogView.findViewById<Button>(R.id.btnOk)
 
         when (status) {
             "wrong_password" -> {
-                imgStatus.setImageResource(R.drawable.crosslogin)
                 txtStatus.text = "Password Tidak Cocok"
             }
             "field_kosong" -> {
-                imgStatus.setImageResource(R.drawable.dangerlogin)
                 txtStatus.text = "Semua field harus diisi"
             }
             "berhasil_daftar" -> {
                 imgStatus.setImageResource(R.drawable.check)
-                txtStatus.text = "Berhasil Daftar & Sinkronisasi"
-            }
-            "berhasil_daftar_tapi_gagal_sinkron" -> {
-                imgStatus.setImageResource(R.drawable.check)
-                txtStatus.text = "Berhasil Daftar! Sinkronisasi Gagal, silakan Backup manual nanti."
-            }
-            "gagal_daftar_db" -> {
-                imgStatus.setImageResource(R.drawable.crosslogin)
-                txtStatus.text = "Gagal menyimpan ke database lokal."
+                txtStatus.text = "Registrasi Berhasil! Silakan Login."
             }
             "password_lemah" -> {
-                imgStatus.setImageResource(R.drawable.dangerlogin)
                 txtStatus.text = "Password Anda masih lemah"
             }
-            "userataupasswordada" -> {
-                imgStatus.setImageResource(R.drawable.dangerlogin)
-                txtStatus.text = "Email atau Username sudah digunakan!"
-            }
             "harusada_@" -> {
-                imgStatus.setImageResource(R.drawable.dangerlogin)
                 txtStatus.text = "Email Tidak Valid!"
             }
         }
 
         btnOk.setOnClickListener {
-            // Pindah ke halaman login HANYA jika registrasi berhasil
-            if (status.startsWith("berhasil_daftar")) {
+            if (status == "berhasil_daftar") {
                 goToLogin()
             }
             alertDialog.dismiss()
         }
-
         alertDialog.setCancelable(false)
         alertDialog.show()
     }

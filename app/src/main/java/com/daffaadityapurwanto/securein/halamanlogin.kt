@@ -21,7 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import android.widget.Toast
-
+import android.util.Log
 
 class halamanlogin : AppCompatActivity() {
     private lateinit var etPassword: EditText
@@ -72,7 +72,7 @@ class halamanlogin : AppCompatActivity() {
         val kunciAES = keyAES()
         val encrypt = Encrypt(kunciAES.KunciAES128, kunciAES.KunciIVKey)
         btnLogin.setOnClickListener {
-            val usernameStr = etUsername.text.toString()
+            val usernameStr = etUsername.text.toString().trim()
             val passwordStr = etPassword.text.toString()
 
             if (usernameStr.isBlank() || passwordStr.isBlank()) {
@@ -80,51 +80,55 @@ class halamanlogin : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // Tampilkan loading (opsional, tapi baik untuk UX)
             Toast.makeText(this, "Mencoba login...", Toast.LENGTH_SHORT).show()
+            Log.d("LoginProcess", "Tombol login ditekan. Memulai validasi untuk user: $usernameStr")
 
             lifecycleScope.launch(Dispatchers.IO) {
-                val kunciAES = keyAES()
-                val encrypt = Encrypt(kunciAES.KunciAES128, kunciAES.KunciIVKey)
-                val hasilencrypt = encrypt.enkripsi(passwordStr)
-                val dbHelper = databaseHelper(this@halamanlogin)
+                try {
+                    val dbHelper = databaseHelper(this@halamanlogin)
+                    val kunciAES = keyAES()
+                    val encrypt = Encrypt(kunciAES.KunciAES128, kunciAES.KunciIVKey)
+                    val hasilencrypt = encrypt.enkripsi(passwordStr)
 
-                // 1. Coba login secara lokal
-                var localUser = dbHelper.loginandcheckuser(usernameStr, usernameStr, hasilencrypt)
+                    Log.d("LoginProcess", "Mencoba login lokal di background thread...")
+                    val localUser = dbHelper.loginandcheckuser(usernameStr, usernameStr, hasilencrypt)
 
-                if (localUser != null) {
-                    // 2. Jika login lokal berhasil, langsung masuk
-                    withContext(Dispatchers.Main) {
-                        saveLoginStatus(true, localUser.id_user)
-                        goToDashboard()
-                    }
-                } else {
-                    // 3. Jika login lokal gagal, coba via server
-                    try {
+                    if (localUser != null) {
+                        Log.d("LoginProcess", "Login lokal BERHASIL untuk user ID: ${localUser.id_user}")
+                        withContext(Dispatchers.Main) {
+                            saveLoginStatus(true, localUser.id_user)
+                            goToDashboard()
+                        }
+                    } else {
+                        Log.d("LoginProcess", "Login lokal GAGAL. Mencoba login via server...")
                         val request = LoginRequest(username = usernameStr, passwordEncrypted = hasilencrypt)
                         val response = RetrofitClient.instance.loginUser(request)
+
+                        Log.d("LoginProcess", "Respons server diterima. Kode: ${response.code()}, Pesan: ${response.message()}")
+
                         val userFromServer = response.body()
 
                         if (response.isSuccessful && userFromServer != null) {
-                            // 4. Jika di server berhasil, simpan data ke lokal
+                            Log.d("LoginProcess", "Login server BERHASIL. Menyimpan data user ID: ${userFromServer.id_user} ke lokal.")
                             dbHelper.insertOrUpdateUser(userFromServer)
 
-                            // 5. Masuk ke dashboard
                             withContext(Dispatchers.Main) {
                                 saveLoginStatus(true, userFromServer.id_user)
                                 goToDashboard()
                             }
                         } else {
-                            // Jika di server juga gagal, tampilkan error
+                            Log.w("LoginProcess", "Login server GAGAL. Server merespons dengan error.")
                             withContext(Dispatchers.Main) {
                                 showCustomDialog("wrong_password")
                             }
                         }
-                    } catch (e: Exception) {
-                        // Tangani jika tidak ada koneksi internet atau server error
-                        withContext(Dispatchers.Main) {
-                            Toast.makeText(this@halamanlogin, "Gagal terhubung ke server. Periksa koneksi internet Anda.", Toast.LENGTH_LONG).show()
-                        }
+                    }
+                } catch (e: Exception) {
+                    // Blok catch ini akan menangkap semua jenis error, termasuk koneksi
+                    Log.e("LoginProcess", "Terjadi EXCEPTION saat proses login:", e)
+
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@halamanlogin, "Login gagal. Periksa koneksi atau kredensial Anda.", Toast.LENGTH_LONG).show()
                     }
                 }
             }

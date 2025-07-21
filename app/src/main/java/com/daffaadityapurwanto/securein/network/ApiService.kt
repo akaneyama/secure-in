@@ -46,10 +46,34 @@ data class BackupResponse(
     @SerializedName("message")
     val message: String
 )
+data class OtpRequest(
+    @SerializedName("email") val email: String,
+    @SerializedName("nama") val nama: String,
+    @SerializedName("username") val username: String,
+    @SerializedName("password") val passwordEncrypted: String,
+    @SerializedName("kunci_enkripsi") val kunciEnkripsi: String
+)
+
+data class OtpVerificationRequest(
+    @SerializedName("email") val email: String,
+    @SerializedName("otp") val otp: String
+)
+
+data class OtpVerificationResponse(
+    @SerializedName("status") val status: String,
+    @SerializedName("message") val message: String,
+    @SerializedName("user_data") val userData: LoginResponse? // Kita bisa pakai ulang LoginResponse
+)
 
 
 // --- Interface untuk Retrofit ---
 interface ApiService {
+
+    @POST("request-otp")
+    suspend fun requestOtp(@Body request: OtpRequest): Response<BackupResponse>
+
+    @POST("verify-otp")
+    suspend fun verifyOtp(@Body request: OtpVerificationRequest): Response<OtpVerificationResponse>
     @POST("backup") // Sesuaikan dengan endpoint di Flask ('/backup')
     suspend fun backupPasswords(@Body request: BackupRequest): Response<BackupResponse>
     @GET("restore")
@@ -92,7 +116,8 @@ data class LoginResponse(
     @SerializedName("email") val email: String,
     @SerializedName("nama") val nama: String,
     @SerializedName("username") val username: String,
-    @SerializedName("password") val password: String
+    @SerializedName("password") val password: String,
+    @SerializedName("is_verified") val is_verified: Int // <-- TAMBAHKAN BARIS INI
 )
 
 // --- Objek untuk membuat instance Retrofit ---

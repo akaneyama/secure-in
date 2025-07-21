@@ -73,26 +73,21 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
 
     fun getUserDetails(userId: Int): users? {
         val db = this.readableDatabase
-        // 1. UBAH QUERY: Ambil semua kolom yang dibutuhkan, termasuk username dan password
-        val cursor = db.rawQuery("SELECT id_user, uid, kunci_enkripsi, email, nama, username, password FROM users WHERE id_user = ?", arrayOf(userId.toString()))
-
+        // UBAH QUERY: Ambil semua kolom yang dibutuhkan
+        val cursor = db.rawQuery("SELECT id_user, uid, kunci_enkripsi, email, nama, username, password, is_verified FROM users WHERE id_user = ?", arrayOf(userId.toString()))
         var user: users? = null
-
         if (cursor.moveToFirst()) {
-            val idUser = cursor.getInt(cursor.getColumnIndexOrThrow("id_user"))
-            val uid = cursor.getString(cursor.getColumnIndexOrThrow("uid"))
-            val kunciEnkripsi = cursor.getString(cursor.getColumnIndexOrThrow("kunci_enkripsi"))
-            val email = cursor.getString(cursor.getColumnIndexOrThrow("email"))
-            val nama = cursor.getString(cursor.getColumnIndexOrThrow("nama"))
-
-            // 2. TAMBAHKAN: Ambil username dan password dari cursor
-            val username = cursor.getString(cursor.getColumnIndexOrThrow("username"))
-            val password = cursor.getString(cursor.getColumnIndexOrThrow("password"))
-
-            // 3. LENGKAPI: Masukkan semua parameter saat membuat objek users
-            user = users(idUser, uid, kunciEnkripsi, email, nama, username, password)
+            user = users(
+                id_user = cursor.getInt(cursor.getColumnIndexOrThrow("id_user")),
+                uid = cursor.getString(cursor.getColumnIndexOrThrow("uid")),
+                kunci_enkripsi = cursor.getString(cursor.getColumnIndexOrThrow("kunci_enkripsi")),
+                email = cursor.getString(cursor.getColumnIndexOrThrow("email")),
+                nama = cursor.getString(cursor.getColumnIndexOrThrow("nama")),
+                username = cursor.getString(cursor.getColumnIndexOrThrow("username")),
+                password = cursor.getString(cursor.getColumnIndexOrThrow("password")),
+                is_verified = cursor.getInt(cursor.getColumnIndexOrThrow("is_verified"))
+            )
         }
-
         cursor.close()
         return user
     }
@@ -203,24 +198,7 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
         }
         db.insert("history_log", null, values)
     }
-    fun getUserByEmail(email: String): users? {
-        val db = this.readableDatabase
-        val cursor = db.rawQuery("SELECT * FROM users WHERE email = ?", arrayOf(email))
-        var user: users? = null
-        if (cursor.moveToFirst()) {
-            user = users(
-                id_user = cursor.getInt(cursor.getColumnIndexOrThrow("id_user")),
-                uid = cursor.getString(cursor.getColumnIndexOrThrow("uid")),
-                kunci_enkripsi = cursor.getString(cursor.getColumnIndexOrThrow("kunci_enkripsi")),
-                email = cursor.getString(cursor.getColumnIndexOrThrow("email")),
-                nama = cursor.getString(cursor.getColumnIndexOrThrow("nama")),
-                username = cursor.getString(cursor.getColumnIndexOrThrow("username")),
-                password = cursor.getString(cursor.getColumnIndexOrThrow("password")) // Password terenkripsi
-            )
-        }
-        cursor.close()
-        return user
-    }
+
     fun getHistoryLogs(): List<BackuprestoreFragment.HistoryLog> {
         val logList = mutableListOf<BackuprestoreFragment.HistoryLog>()
         val db = this.readableDatabase
@@ -358,28 +336,22 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
 
 
     fun loginandcheckuser(username: String, email: String, password: String): users? {
-        // 1. Gunakan readableDatabase standar untuk konsistensi
         val db = this.readableDatabase
-
-        // 2. PERBAIKI QUERY: Tambahkan kurung untuk logika yang benar dan ambil semua kolom
-        val query = "SELECT id_user, uid, kunci_enkripsi, email, nama, username, password FROM users WHERE (username = ? OR email = ?) AND password = ?"
+        val query = "SELECT id_user, uid, kunci_enkripsi, email, nama, username, password, is_verified FROM users WHERE (username = ? OR email = ?) AND password = ? AND is_verified = 1"
         val cursor = db.rawQuery(query, arrayOf(username, email, password))
 
         var user: users? = null
         if (cursor.moveToFirst()) {
-            val id_user = cursor.getInt(cursor.getColumnIndexOrThrow("id_user"))
-            val uid = cursor.getString(cursor.getColumnIndexOrThrow("uid"))
-            val kunci_enkripsi = cursor.getString(cursor.getColumnIndexOrThrow("kunci_enkripsi"))
-            val emailResult = cursor.getString(cursor.getColumnIndexOrThrow("email"))
-            val nama = cursor.getString(cursor.getColumnIndexOrThrow("nama"))
-            // 3. TAMBAHKAN: Ambil username dan password dari cursor
-            val usernameResult = cursor.getString(cursor.getColumnIndexOrThrow("username"))
-            val passwordResult = cursor.getString(cursor.getColumnIndexOrThrow("password"))
-
-            // 4. LENGKAPI: Panggil constructor dengan semua parameter
-            user = users(id_user, uid, kunci_enkripsi, emailResult, nama, usernameResult, passwordResult)
-
-            // Lakukan hal yang sama untuk CurrentUser
+            user = users(
+                id_user = cursor.getInt(cursor.getColumnIndexOrThrow("id_user")),
+                uid = cursor.getString(cursor.getColumnIndexOrThrow("uid")),
+                kunci_enkripsi = cursor.getString(cursor.getColumnIndexOrThrow("kunci_enkripsi")),
+                email = cursor.getString(cursor.getColumnIndexOrThrow("email")),
+                nama = cursor.getString(cursor.getColumnIndexOrThrow("nama")),
+                username = cursor.getString(cursor.getColumnIndexOrThrow("username")),
+                password = cursor.getString(cursor.getColumnIndexOrThrow("password")),
+                is_verified = cursor.getInt(cursor.getColumnIndexOrThrow("is_verified"))
+            )
             CurrentUser.user = user
         }
         cursor.close()
@@ -401,9 +373,9 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
             put("email", user.email)
             put("nama", user.nama)
             put("username", user.username)
-            put("password", user.password) // Password dari server sudah terenkripsi
+            put("password", user.password)
+            put("is_verified", user.is_verified) // <-- TAMBAHKAN INI
         }
-        // "replace" akan melakukan INSERT jika id_user belum ada, atau UPDATE jika sudah ada.
         db.replace("users", null, values)
     }
 
