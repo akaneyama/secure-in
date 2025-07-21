@@ -21,6 +21,7 @@ import com.daffaadityapurwanto.securein.data.NotificationHelper
 import com.daffaadityapurwanto.securein.data.databaseHelper
 import java.time.LocalTime
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 
@@ -120,20 +121,37 @@ class DashboardFragment : Fragment() {
     private fun refreshDashboardData() {
         // --- Logika untuk memuat ulang semua data dashboard ---
         setGreeting()
-        val user = CurrentUser.user
-        if (user != null) {
-            namauser.text = user.nama
-            todayyysinkron.text = dbHelper.ambildatasinkron(user.id_user.toString())
 
-            angkapasswordtotal.text = dbHelper.hitungJumlahPassword(user.id_user.toString())
+        // Ambil ID user dari SharedPreferences sebagai sumber kebenaran utama
+        val sharedPref = requireActivity().getSharedPreferences("LoginPrefs", Context.MODE_PRIVATE)
+        val loggedInUserId = sharedPref.getInt("userId", -1)
 
-            // Ambil data terbaru untuk list dan update adapter
-            val dataList = getNewlyAddedItems(user.id_user)
-            adapter.updateData(dataList)
+        if (loggedInUserId != -1) {
+            // Gunakan Coroutine untuk menjalankan operasi database di background thread
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                // Ambil semua data dari DB di sini
+                val user = dbHelper.getUserDetails(loggedInUserId) // Anda perlu membuat fungsi ini di dbHelper
+                val syncData = dbHelper.getLastSuccessfulSyncTimestamp()
+                val passwordCount = dbHelper.hitungJumlahPassword(loggedInUserId.toString())
+                val newlyAddedItems = getNewlyAddedItems(loggedInUserId)
+
+                // Setelah data siap, kembali ke UI Thread untuk memperbarui tampilan
+                launch(Dispatchers.Main) {
+                    if (user != null) {
+                        namauser.text = user.nama
+                    } else {
+                        namauser.text = "Guest"
+                    }
+                    todayyysinkron.text = syncData
+                    angkapasswordtotal.text = passwordCount
+                    adapter.updateData(newlyAddedItems)
+                }
+            }
         } else {
+            // Kondisi jika user tidak ditemukan di SharedPreferences
             angkapasswordtotal.text = "User tidak ditemukan"
             namauser.text = "Guest"
-            adapter.updateData(emptyList()) // Kosongkan list jika user tidak ada
+            adapter.updateData(emptyList()) // Kosongkan list
         }
     }
 

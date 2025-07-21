@@ -10,17 +10,21 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.daffaadityapurwanto.securein.data.CurrentUser
 import com.daffaadityapurwanto.securein.data.Kategori
 import com.daffaadityapurwanto.securein.data.databaseHelper
 import com.daffaadityapurwanto.securein.encryption.Encrypt
 import com.daffaadityapurwanto.securein.encryption.keyAES
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.random.Random
 
 class menutambahdanedit : AppCompatActivity() {
 
     // --- Deklarasi Variabel ---
-    private lateinit var spinnerKategori: Spinner
+//    private lateinit var spinnerKategori: Spinner
     private lateinit var etPassword: EditText
     private lateinit var ivShowPassword: ImageView
     private lateinit var kembalikemain: ImageView
@@ -28,7 +32,7 @@ class menutambahdanedit : AppCompatActivity() {
     private lateinit var passwordStrength: TextView
     private lateinit var simpandatakedb: TextView
     private var isPasswordVisible = false
-    private lateinit var kategoriList: List<Kategori>
+//    private lateinit var kategoriList: List<Kategori>
     private lateinit var emailtext: EditText
     private lateinit var usernametext: EditText
     private lateinit var notestext: EditText
@@ -47,7 +51,7 @@ class menutambahdanedit : AppCompatActivity() {
         kembalikemain = findViewById(R.id.buttonkembali)
         generatePassword = findViewById(R.id.generatepassword)
         passwordStrength = findViewById(R.id.passwordStrength)
-        spinnerKategori = findViewById(R.id.spinnerkategori)
+//        spinnerKategori = findViewById(R.id.spinnerkategori)
         etPassword = findViewById(R.id.etpassword)
         ivShowPassword = findViewById(R.id.lihatpassword)
         emailtext = findViewById(R.id.ETEmail)
@@ -64,9 +68,9 @@ class menutambahdanedit : AppCompatActivity() {
         // Setup semua listener
         setupListeners()
         // Muat data untuk spinner
-        loadKategoriFromDatabase()
+//        loadKategoriFromDatabase()
         // Setup adapter untuk spinner
-        setupSpinnerAdapter()
+//        setupSpinnerAdapter()
 
         // Jika dalam mode Edit, isi form dengan data yang ada
         if (isEditMode) {
@@ -77,7 +81,9 @@ class menutambahdanedit : AppCompatActivity() {
     private fun setupListeners() {
         // Tombol kembali
         kembalikemain.setOnClickListener {
-            // Cukup tutup activity ini, tidak perlu memulai activity baru
+            Intent(this, MainDashboard::class.java).also {
+                startActivity(it)
+            }
             finish()
         }
 
@@ -123,109 +129,146 @@ class menutambahdanedit : AppCompatActivity() {
 
     // Fungsi untuk mengisi data ke form jika dalam mode edit
     private fun populateFormForEdit(passwordId: String) {
-        // Ambil detail data dari database
-        val itemDetails = dbHelper.getPasswordDetails(passwordId) ?: return
-        val user = CurrentUser.user ?: return
+        // Jalankan proses ambil data dan dekripsi di background thread
+        lifecycleScope.launch(Dispatchers.IO) {
+            // 1. Ambil detail password dari database
+            val itemDetails = dbHelper.getPasswordDetails(passwordId)
 
-        // Ubah teks tombol menjadi "Update"
-        simpandatakedb.text = "Update"
+            // 2. Ambil ID user dari SharedPreferences (sumber yang aman)
+            val sharedPref = getSharedPreferences("LoginPrefs", MODE_PRIVATE)
+            val currentUserId = sharedPref.getInt("userId", -1)
 
-        // Dekripsi password untuk ditampilkan
-        val kunciAES = keyAES()
-        val decryptor = Encrypt(user.kunci_enkripsi, kunciAES.KunciIVKey)
-        val decryptedPassword = decryptor.dekripsi(itemDetails.password)
+            if (itemDetails != null && currentUserId != -1) {
+                // 3. Ambil detail user dari database menggunakan ID
+                val user = dbHelper.getUserDetails(currentUserId)
 
-        // Isi semua field dengan data yang ada
-        emailtext.setText(itemDetails.emailName)
-        usernametext.setText(itemDetails.username)
-        notestext.setText(itemDetails.notes)
-        etPassword.setText(decryptedPassword)
+                if (user != null) {
+                    // 4. Proses dekripsi password
+                    val kunciAES = keyAES()
+                    val decryptor = Encrypt(user.kunci_enkripsi, kunciAES.KunciIVKey)
+                    val decryptedPassword = decryptor.dekripsi(itemDetails.password)
 
-        // Atur pilihan spinner sesuai data
-        val kategoriPosition = kategoriList.indexOfFirst { it.id_service == itemDetails.idservice }
-        if (kategoriPosition != -1) {
-            spinnerKategori.setSelection(kategoriPosition)
+                    // 5. Kembali ke Main thread untuk mengisi tampilan (UI)
+                    withContext(Dispatchers.Main) {
+                        simpandatakedb.text = "Update"
+                        emailtext.setText(itemDetails.emailName)
+                        usernametext.setText(itemDetails.username)
+                        notestext.setText(itemDetails.notes)
+                        etPassword.setText(decryptedPassword)
+                    }
+                }
+            }
         }
     }
 
     // Fungsi untuk menyimpan data BARU (logika asli Anda)
+    // Ganti fungsi performInsert() Anda dengan ini
     private fun performInsert() {
-        val user = CurrentUser.user
-        if (user != null) {
-            val selectedKategori = spinnerKategori.selectedItem as Kategori
-            val email = emailtext.text.toString()
-            val username = usernametext.text.toString()
-            val notesin = notestext.text.toString()
+        // 1. Ambil ID pengguna dari SharedPreferences, ini sumber yang paling aman
+        val sharedPref = getSharedPreferences("LoginPrefs", MODE_PRIVATE)
+        val currentUserId = sharedPref.getInt("userId", -1)
 
-            if (email.isBlank() || !email.contains("@")) {
-                showCustomDialog("harusada_@")
-                return
+        if (currentUserId == -1) {
+            Toast.makeText(this, "Sesi pengguna tidak valid, silakan login ulang.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val email = emailtext.text.toString()
+        val username = usernametext.text.toString()
+        val notesin = notestext.text.toString()
+        val passwordToEncrypt = etPassword.text.toString()
+
+        if (email.isBlank() || !email.contains("@")) {
+            showCustomDialog("harusada_@")
+            return
+        }
+
+        // 2. Jalankan proses enkripsi dan simpan di background thread
+        lifecycleScope.launch(Dispatchers.IO) {
+            // 3. Ambil detail pengguna dari database menggunakan ID yang kita dapat
+            val user = dbHelper.getUserDetails(currentUserId)
+
+            if (user != null) {
+                val kunciAES = keyAES()
+                val encryptor = Encrypt(user.kunci_enkripsi, kunciAES.KunciIVKey)
+                val passwordsafe = encryptor.enkripsi(passwordToEncrypt)
+
+                dbHelper.insertTopasswordDatabase(user.id_user.toString(), email, username, passwordsafe, notesin)
+
+                // 4. Tampilkan dialog dan bersihkan form di Main thread
+                withContext(Dispatchers.Main) {
+                    showCustomDialog("berhasil_daftar")
+                    emailtext.text.clear()
+                    usernametext.text.clear()
+                    etPassword.text.clear()
+                    notestext.text.clear()
+                }
             }
-
-            val kunciAES = keyAES()
-            val encryptor = Encrypt(user.kunci_enkripsi, kunciAES.KunciIVKey)
-            val passwordsafe = encryptor.enkripsi(etPassword.text.toString())
-
-            dbHelper.insertTopasswordDatabase(user.id_user.toString(), selectedKategori.id_service, email, username, passwordsafe, notesin)
-            showCustomDialog("berhasil_daftar")
-
-            // Kosongkan form setelah berhasil
-            emailtext.text.clear()
-            usernametext.text.clear()
-            etPassword.text.clear()
-            notestext.text.clear()
         }
     }
 
-    // Fungsi untuk MEMPERBARUI data yang ada
+    // Ganti fungsi performUpdate() Anda dengan ini
     private fun performUpdate() {
-        val user = CurrentUser.user
-        if (user != null && editingPasswordId != null) {
-            val selectedKategori = spinnerKategori.selectedItem as Kategori
-            val email = emailtext.text.toString()
-            val username = usernametext.text.toString()
-            val notes = notestext.text.toString()
+        val sharedPref = getSharedPreferences("LoginPrefs", MODE_PRIVATE)
+        val currentUserId = sharedPref.getInt("userId", -1)
 
-            val kunciAES = keyAES()
-            val encryptor = Encrypt(user.kunci_enkripsi, kunciAES.KunciIVKey)
-            val newEncryptedPassword = encryptor.enkripsi(etPassword.text.toString())
+        if (currentUserId == -1 || editingPasswordId == null) {
+            Toast.makeText(this, "Gagal memperbarui, sesi tidak valid.", Toast.LENGTH_LONG).show()
+            return
+        }
 
-            dbHelper.updatePassword(editingPasswordId!!, selectedKategori.id_service, email, username, newEncryptedPassword, notes)
+        val email = emailtext.text.toString()
+        val username = usernametext.text.toString()
+        val notes = notestext.text.toString()
+        val newPasswordToEncrypt = etPassword.text.toString()
 
-            Toast.makeText(this, "Data berhasil diperbarui", Toast.LENGTH_SHORT).show()
-            finish() // Kembali ke halaman list setelah update berhasil
+        lifecycleScope.launch(Dispatchers.IO) {
+            val user = dbHelper.getUserDetails(currentUserId)
+
+            if (user != null) {
+                val kunciAES = keyAES()
+                val encryptor = Encrypt(user.kunci_enkripsi, kunciAES.KunciIVKey)
+                val newEncryptedPassword = encryptor.enkripsi(newPasswordToEncrypt)
+
+                dbHelper.updatePassword(editingPasswordId!!, email, username, newEncryptedPassword, notes)
+
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@menutambahdanedit, "Data berhasil diperbarui", Toast.LENGTH_SHORT).show()
+                    finish() // Kembali ke halaman list setelah update berhasil
+                }
+            }
         }
     }
 
     // Fungsi setup adapter spinner (logika asli Anda)
-    private fun setupSpinnerAdapter() {
-        val adapter = object : ArrayAdapter<Kategori>(this, R.layout.spinner_item, kategoriList) {
-            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-                return getCustomView(position, parent)
-            }
-
-            override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
-                return getCustomView(position, parent)
-            }
-
-            private fun getCustomView(position: Int, parent: ViewGroup): View {
-                val view = LayoutInflater.from(context).inflate(R.layout.spinner_item, parent, false)
-                val icon = view.findViewById<ImageView>(R.id.iconkategori)
-                val text = view.findViewById<TextView>(R.id.textkategori)
-                val kategori = getItem(position)
-                if(kategori != null){
-                    icon.setImageResource(kategori.iconResId)
-                    text.text = kategori.nama
-                }
-                return view
-            }
-        }
-        spinnerKategori.adapter = adapter
-        spinnerKategori.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {}
-            override fun onNothingSelected(parent: AdapterView<*>) {}
-        }
-    }
+//    private fun setupSpinnerAdapter() {
+//        val adapter = object : ArrayAdapter<Kategori>(this, R.layout.spinner_item, kategoriList) {
+//            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+//                return getCustomView(position, parent)
+//            }
+//
+//            override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
+//                return getCustomView(position, parent)
+//            }
+//
+//            private fun getCustomView(position: Int, parent: ViewGroup): View {
+//                val view = LayoutInflater.from(context).inflate(R.layout.spinner_item, parent, false)
+//                val icon = view.findViewById<ImageView>(R.id.iconkategori)
+//                val text = view.findViewById<TextView>(R.id.textkategori)
+//                val kategori = getItem(position)
+//                if(kategori != null){
+//                    icon.setImageResource(kategori.iconResId)
+//                    text.text = kategori.nama
+//                }
+//                return view
+//            }
+//        }
+//        spinnerKategori.adapter = adapter
+//        spinnerKategori.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+//            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {}
+//            override fun onNothingSelected(parent: AdapterView<*>) {}
+//        }
+//    }
 
     // Fungsi lain-lain (logika asli Anda)
     private fun generateRandomPassword(): String {
@@ -268,26 +311,26 @@ class menutambahdanedit : AppCompatActivity() {
         alertDialog.show()
     }
 
-    private fun loadKategoriFromDatabase() {
-        val db: SQLiteDatabase = dbHelper.openDatabase()
-        val tempList = mutableListOf<Kategori>()
-        val cursor = db.rawQuery("SELECT id_service, nama_Service, id_kategori FROM services", null)
-        if (cursor.moveToFirst()) {
-            do {
-                val idService = cursor.getString(0)
-                val namaService = cursor.getString(1)
-                val idKategori = cursor.getString(2)
-                val kategori = Kategori(
-                    nama = namaService,
-                    iconResId = R.drawable.logingoogle,
-                    id_service = idService,
-                    id_kategori = idKategori
-                )
-                tempList.add(kategori)
-            } while (cursor.moveToNext())
-        }
-        cursor.close()
-        db.close()
-        kategoriList = tempList
-    }
+//    private fun loadKategoriFromDatabase() {
+//        val db: SQLiteDatabase = dbHelper.openDatabase()
+//        val tempList = mutableListOf<Kategori>()
+//        val cursor = db.rawQuery("SELECT id_service, nama_Service, id_kategori FROM services", null)
+//        if (cursor.moveToFirst()) {
+//            do {
+//                val idService = cursor.getString(0)
+//                val namaService = cursor.getString(1)
+//                val idKategori = cursor.getString(2)
+//                val kategori = Kategori(
+//                    nama = namaService,
+//                    iconResId = R.drawable.logingoogle,
+//                    id_service = idService,
+//                    id_kategori = idKategori
+//                )
+//                tempList.add(kategori)
+//            } while (cursor.moveToNext())
+//        }
+//        cursor.close()
+//        db.close()
+//        kategoriList = tempList
+    //}
 }

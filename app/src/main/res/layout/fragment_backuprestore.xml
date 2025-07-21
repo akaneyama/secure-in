@@ -64,6 +64,7 @@
                     android:fontFamily="@font/opensansmediumitalic" />
 
                 <TextView
+                    android:id="@+id/terakhirsingkronisasi"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Today"

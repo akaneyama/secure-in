@@ -8,36 +8,25 @@
     tools:context=".menutambahdanedit">
 
 
-
     <LinearLayout
         android:id="@+id/logobackdansave"
-        android:layout_marginTop="10dp"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintWidth_percent="0.9"
-        app:layout_constraintHeight_percent="0.06"
+        android:layout_marginTop="10dp"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.06"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent="0.9">
 
         <ImageView
             android:id="@+id/buttonkembali"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:src="@drawable/buttonkembali"/>
-        <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Password"
-            android:textSize="20dp"
-            android:fontFamily="@font/opensansbold"
-            android:textColor="@color/white"/>
+            android:src="@drawable/buttonkembali" />
+
         <View
             android:layout_width="0dp"
             android:layout_height="0dp"
@@ -46,152 +35,165 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Save"
-            android:textSize="20dp"
             android:fontFamily="@font/opensansbold"
+            android:text="Password"
+            android:textColor="@color/white"
+            android:textSize="20dp" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <TextView
             android:id="@+id/savedatakedatabase"
-            android:textColor="@color/unguteks"/>
-        
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/opensansbold"
+            android:text="Save"
+            android:textColor="@color/unguteks"
+            android:textSize="20dp" />
+
     </LinearLayout>
 
     <TextView
-        android:layout_marginTop="10dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Email"
-        android:fontFamily="@font/opensanssemibold"
-        android:textColor="@color/white"
-        app:layout_constraintTop_toBottomOf="@id/spinnerkategori"
-        app:layout_constraintStart_toStartOf="parent"
         android:layout_marginLeft="20dp"
-        android:textSize="15dp"/>
+        android:layout_marginTop="10dp"
+        android:fontFamily="@font/opensanssemibold"
+        android:text="Email"
+        android:textColor="@color/white"
+        android:textSize="15dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/logobackdansave" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Username"
+        android:layout_marginLeft="20dp"
         android:layout_marginTop="10dp"
         android:fontFamily="@font/opensanssemibold"
+        android:text="Username"
         android:textColor="@color/white"
-        app:layout_constraintTop_toBottomOf="@id/tombolemail"
+        android:textSize="15dp"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginLeft="20dp"
-        android:textSize="15dp"/>
+        app:layout_constraintTop_toBottomOf="@id/tombolemail" />
 
     <LinearLayout
         android:id="@+id/tombolemail"
-        android:layout_marginTop="40dp"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/spinnerkategori"
-        app:layout_constraintWidth_percent="0.9"
-        app:layout_constraintHeight_percent="0.06"
-        android:orientation="horizontal"
+        android:layout_marginTop="40dp"
         android:background="@drawable/backgroundlistviewdidashboard"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.06"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/logobackdansave"
+        app:layout_constraintWidth_percent="0.9">
 
         <ImageView
-            android:layout_margin="5dp"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:src="@drawable/email"/>
+            android:layout_margin="5dp"
+            android:src="@drawable/email" />
 
         <EditText
             android:id="@+id/ETEmail"
-            android:layout_margin="5dp"
-            android:background="@null"
             android:layout_width="match_parent"
             android:layout_height="30dp"
-            android:textSize="15dp"
-            android:hint="Email"
+            android:layout_margin="5dp"
+            android:background="@null"
             android:fontFamily="@font/opensansmedium"
-            android:inputType="textEmailAddress"/>
+            android:hint="Email"
+            android:inputType="textEmailAddress"
+            android:textSize="15dp" />
 
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/tombolusername"
-        android:layout_marginTop="40dp"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tombolemail"
-        app:layout_constraintWidth_percent="0.9"
-        app:layout_constraintHeight_percent="0.06"
-        android:orientation="horizontal"
+        android:layout_marginTop="40dp"
         android:background="@drawable/backgroundlistviewdidashboard"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.06"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tombolemail"
+        app:layout_constraintWidth_percent="0.9">
 
         <ImageView
-            android:layout_margin="5dp"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:src="@drawable/usernamelog"/>
+            android:layout_margin="5dp"
+            android:src="@drawable/usernamelog" />
 
         <EditText
             android:id="@+id/ETUsername"
-            android:layout_margin="5dp"
-            android:background="@null"
             android:layout_width="match_parent"
             android:layout_height="30dp"
-            android:textSize="15dp"
-            android:hint="Username"
+            android:layout_margin="5dp"
+            android:background="@null"
             android:fontFamily="@font/opensansmedium"
-            android:inputType="text"/>
+            android:hint="Username"
+            android:inputType="text"
+            android:textSize="15dp" />
 
     </LinearLayout>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Password"
+        android:layout_marginLeft="20dp"
         android:layout_marginTop="10dp"
         android:fontFamily="@font/opensanssemibold"
+        android:text="Password"
         android:textColor="@color/white"
-        app:layout_constraintTop_toBottomOf="@id/tombolusername"
+        android:textSize="15dp"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginLeft="20dp"
-        android:textSize="15dp"/>
+        app:layout_constraintTop_toBottomOf="@id/tombolusername" />
 
     <LinearLayout
         android:id="@+id/tombolpassword"
-        android:layout_marginTop="40dp"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginLeft="20dp"
+        android:layout_marginTop="40dp"
+        android:background="@drawable/backgroundlistviewdidashboard"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintHeight_percent="0.06"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tombolusername"
-        app:layout_constraintWidth_percent="0.9"
-        app:layout_constraintHeight_percent="0.06"
-        android:orientation="horizontal"
-        android:background="@drawable/backgroundlistviewdidashboard"
-        android:gravity="center_vertical">
+        app:layout_constraintWidth_percent="0.9">
 
         <ImageView
-            android:layout_margin="5dp"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:src="@drawable/passwordlog"/>
+            android:layout_margin="5dp"
+            android:src="@drawable/passwordlog" />
 
         <EditText
             android:id="@+id/etpassword"
-            android:layout_margin="5dp"
-            android:background="@null"
             android:layout_width="268dp"
             android:layout_height="30dp"
-            android:textSize="15dp"
+            android:layout_margin="5dp"
+            android:background="@null"
             android:fontFamily="@font/opensansmedium"
             android:hint="Password"
-            android:inputType="textPassword"/>
+            android:inputType="textPassword"
+            android:textSize="15dp" />
 
         <ImageView
             android:id="@+id/lihatpassword"
             android:layout_width="30dp"
             android:layout_height="wrap_content"
-            android:src="@drawable/eyesopen"/>
+            android:src="@drawable/eyesopen" />
 
     </LinearLayout>
 
@@ -199,108 +201,84 @@
         android:id="@+id/passwordStrength"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Password strength"
-        android:textSize="12sp"
-        android:layout_marginTop="4dp"
-        android:textColor="@android:color/white"
         android:layout_marginLeft="20dp"
-        app:layout_constraintTop_toBottomOf="@id/tombolpassword"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:layout_marginTop="4dp"
+        android:text="Password strength"
+        android:textColor="@android:color/white"
+        android:textSize="12sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tombolpassword" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Notes"
+        android:layout_marginLeft="20dp"
         android:layout_marginTop="10dp"
         android:fontFamily="@font/opensanssemibold"
+        android:text="Notes"
         android:textColor="@color/white"
-        app:layout_constraintTop_toBottomOf="@id/generatepassword"
+        android:textSize="15dp"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginLeft="20dp"
-        android:textSize="15dp"/>
+        app:layout_constraintTop_toBottomOf="@id/generatepassword" />
 
     <LinearLayout
         android:id="@+id/generatepassword"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintWidth_percent="0.9"
-        app:layout_constraintHeight_percent="0.06"
         android:layout_marginTop="10dp"
-        app:layout_constraintTop_toBottomOf="@id/passwordStrength"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:orientation="horizontal"
+        android:background="@drawable/backgroundlistviewdidashboard"
         android:gravity="center_horizontal"
-        android:background="@drawable/backgroundlistviewdidashboard">
-            <TextView
-                android:textAlignment="center"
-                android:padding="11dp"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:text="Generate Password"
-                android:textSize="15dp"
-                android:textColor="@color/ungubutton"
-                android:fontFamily="@font/opensansbold"/>
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.06"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/passwordStrength"
+        app:layout_constraintWidth_percent="0.9">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:fontFamily="@font/opensansbold"
+            android:padding="11dp"
+            android:text="Generate Password"
+            android:textAlignment="center"
+            android:textColor="@color/ungubutton"
+            android:textSize="15dp" />
     </LinearLayout>
 
 
     <LinearLayout
         android:id="@+id/tombolnotes"
-        android:layout_marginTop="40dp"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/generatepassword"
-        app:layout_constraintWidth_percent="0.9"
-        app:layout_constraintHeight_percent="0.06"
-        android:orientation="horizontal"
+        android:layout_marginTop="40dp"
         android:background="@drawable/backgroundlistviewdidashboard"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.06"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/generatepassword"
+        app:layout_constraintWidth_percent="0.9">
 
         <ImageView
-            android:layout_margin="5dp"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:src="@drawable/usernamelog"/>
+            android:layout_margin="5dp"
+            android:src="@drawable/usernamelog" />
 
         <EditText
-            android:layout_margin="5dp"
-            android:background="@null"
+            android:id="@+id/ETNotes"
             android:layout_width="match_parent"
             android:layout_height="30dp"
-            android:textSize="15dp"
-            android:hint="Notes"
-            android:id="@+id/ETNotes"
+            android:layout_margin="5dp"
+            android:background="@null"
             android:fontFamily="@font/opensansmedium"
-            android:inputType="text"/>
+            android:hint="Notes"
+            android:inputType="text"
+            android:textSize="15dp" />
 
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/kategorititle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Kategori"
-        android:layout_marginTop="10dp"
-        android:fontFamily="@font/opensanssemibold"
-        android:textColor="@color/white"
-        app:layout_constraintTop_toBottomOf="@id/logobackdansave"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginLeft="20dp"
-        android:textSize="15dp"/>
-
-    <Spinner
-        android:id="@+id/spinnerkategori"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="10dp"
-        app:layout_constraintTop_toBottomOf="@id/kategorititle"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintWidth_percent="0.9"
-        app:layout_constraintHeight_percent="0.06"
-        android:background="@drawable/backgroundlistviewdidashboard"
-        android:spinnerMode="dialog"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

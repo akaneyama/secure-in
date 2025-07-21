@@ -18,7 +18,10 @@ import java.io.OutputStream
 import java.security.SecureRandom
 import android.util.Base64
 import com.daffaadityapurwanto.securein.R
+import com.daffaadityapurwanto.securein.fragmentdashboard.BackuprestoreFragment
 import com.daffaadityapurwanto.securein.fragmentdashboard.mypasswordFragment
+import com.daffaadityapurwanto.securein.network.LoginResponse
+import com.daffaadityapurwanto.securein.network.PasswordData
 
 
 class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
@@ -37,7 +40,7 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
     fun deletePasswordById(idPassword: String): Int {
         val db = this.writableDatabase
         val result = db.delete("password", "id_password = ?", arrayOf(idPassword))
-        db.close()
+        
         return result
     }
 
@@ -63,22 +66,186 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
             )
         }
         cursor.close()
-        db.close()
+        
         return item
     }
+    // Contoh fungsi yang perlu Anda tambahkan di databaseHelper.kt
 
-    fun updatePassword(idPassword: String, idService: String, email: String, username: String, newEncryptedPass: String, notes: String): Int {
+    fun getUserDetails(userId: Int): users? {
+        val db = this.readableDatabase
+        // 1. UBAH QUERY: Ambil semua kolom yang dibutuhkan, termasuk username dan password
+        val cursor = db.rawQuery("SELECT id_user, uid, kunci_enkripsi, email, nama, username, password FROM users WHERE id_user = ?", arrayOf(userId.toString()))
+
+        var user: users? = null
+
+        if (cursor.moveToFirst()) {
+            val idUser = cursor.getInt(cursor.getColumnIndexOrThrow("id_user"))
+            val uid = cursor.getString(cursor.getColumnIndexOrThrow("uid"))
+            val kunciEnkripsi = cursor.getString(cursor.getColumnIndexOrThrow("kunci_enkripsi"))
+            val email = cursor.getString(cursor.getColumnIndexOrThrow("email"))
+            val nama = cursor.getString(cursor.getColumnIndexOrThrow("nama"))
+
+            // 2. TAMBAHKAN: Ambil username dan password dari cursor
+            val username = cursor.getString(cursor.getColumnIndexOrThrow("username"))
+            val password = cursor.getString(cursor.getColumnIndexOrThrow("password"))
+
+            // 3. LENGKAPI: Masukkan semua parameter saat membuat objek users
+            user = users(idUser, uid, kunciEnkripsi, email, nama, username, password)
+        }
+
+        cursor.close()
+        return user
+    }
+    fun updatePassword(idPassword: String, email: String, username: String, newEncryptedPass: String, notes: String): Int {
         val db = this.writableDatabase
         val values = ContentValues().apply {
-            put("id_service", idService)
+            put("id_service", 3) // Tambahkan baris ini
             put("email", email)
             put("username", username)
             put("password", newEncryptedPass)
             put("notes", notes)
         }
         val result = db.update("password", values, "id_password = ?", arrayOf(idPassword))
-        db.close()
+        // Tidak perlu () di sini
         return result
+    }
+
+    // Tambahkan data class sederhana ini di dalam file databaseHelper.kt atau di file model terpisah
+    data class PasswordForBackup(
+        val idService: String,
+        val notes: String,
+        val emailName: String,
+        val username: String,
+        val passwordEncrypted: String
+    )
+
+    // Tambahkan fungsi ini di dalam class databaseHelper
+    fun getAllPasswordsForBackup(idUser: Int): List<PasswordForBackup> {
+        val itemList = mutableListOf<PasswordForBackup>()
+        val db = this.readableDatabase
+        // Query ini mengambil data dari tabel 'password'
+        val query = "SELECT id_service, notes, email, username, password FROM password WHERE id_user = ?"
+        val cursor = db.rawQuery(query, arrayOf(idUser.toString()))
+
+        if (cursor.moveToFirst()) {
+            do {
+                // Pastikan indeks kolomnya benar
+                itemList.add(PasswordForBackup(
+                    idService = cursor.getString(0),
+                    notes = cursor.getString(1),       // Kolom 'notes'
+                    emailName = cursor.getString(2),   // Kolom 'email'
+                    username = cursor.getString(3),    // Kolom 'username'
+                    passwordEncrypted = cursor.getString(4) // Kolom 'password'
+                ))
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return itemList
+    }
+// Di dalam class databaseHelper
+
+    // Panggil ini di dalam onCreate(db: SQLiteDatabase) jika Anda membuat tabel dari awal
+    fun createHistoryTable(db: SQLiteDatabase) {
+        val CREATE_HISTORY_TABLE = """
+        CREATE TABLE history_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            log_type TEXT,
+            status TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """.trimIndent()
+        db.execSQL(CREATE_HISTORY_TABLE)
+    }
+    fun getLastSuccessfulSyncTimestamp(): String? {
+        val db = this.readableDatabase
+        var timestamp: String? = null
+
+        // Query untuk mengambil timestamp dari log terakhir yang statusnya 'Success'
+        val cursor = db.rawQuery(
+            "SELECT timestamp FROM history_log WHERE status = 'Success' ORDER BY timestamp DESC LIMIT 1",
+            null
+        )
+
+        if (cursor.moveToFirst()) {
+            timestamp = cursor.getString(0)
+        }
+
+        cursor.close()
+        return timestamp
+    }
+    fun addHistoryLog(type: String, status: String, timestamp: String) { // <-- 1. Tambahkan parameter ketiga
+        val db = this.writableDatabase
+        val values = android.content.ContentValues().apply {
+            put("log_type", type)
+            put("status", status)
+            put("timestamp", timestamp) // <-- 2. Masukkan timestamp ke database
+        }
+        db.insert("history_log", null, values)
+    }
+    fun getUserByEmail(email: String): users? {
+        val db = this.readableDatabase
+        val cursor = db.rawQuery("SELECT * FROM users WHERE email = ?", arrayOf(email))
+        var user: users? = null
+        if (cursor.moveToFirst()) {
+            user = users(
+                id_user = cursor.getInt(cursor.getColumnIndexOrThrow("id_user")),
+                uid = cursor.getString(cursor.getColumnIndexOrThrow("uid")),
+                kunci_enkripsi = cursor.getString(cursor.getColumnIndexOrThrow("kunci_enkripsi")),
+                email = cursor.getString(cursor.getColumnIndexOrThrow("email")),
+                nama = cursor.getString(cursor.getColumnIndexOrThrow("nama")),
+                username = cursor.getString(cursor.getColumnIndexOrThrow("username")),
+                password = cursor.getString(cursor.getColumnIndexOrThrow("password")) // Password terenkripsi
+            )
+        }
+        cursor.close()
+        return user
+    }
+    fun getHistoryLogs(): List<BackuprestoreFragment.HistoryLog> {
+        val logList = mutableListOf<BackuprestoreFragment.HistoryLog>()
+        val db = this.readableDatabase
+        val cursor = db.rawQuery("SELECT log_type, status, timestamp FROM history_log ORDER BY timestamp DESC", null)
+        if (cursor.moveToFirst()) {
+            do {
+                logList.add(BackuprestoreFragment.HistoryLog(
+                    type = cursor.getString(0),
+                    status = cursor.getString(1),
+                    timestamp = cursor.getString(2)
+                ))
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return logList
+    }
+
+    // Di dalam file databaseHelper.kt
+
+    fun overwriteLocalPasswords(userId: Int, passwordsFromServer: List<PasswordData>) {
+        val db = this.writableDatabase
+        db.beginTransaction()
+        try {
+            db.delete("password", "id_user = ?", arrayOf(userId.toString()))
+            val insertQuery = "INSERT INTO password (id_user, id_service, email, username, password, notes) VALUES (?, ?, ?, ?, ?, ?)"
+            val statement = db.compileStatement(insertQuery)
+
+            for (item in passwordsFromServer) {
+                statement.clearBindings()
+                statement.bindLong(1, userId.toLong())
+
+                // TAMBAHKAN PENGECEKAN INI:
+                // Jika idService dari server null, gunakan nilai default "3"
+                val serviceId = item.idService ?: "3"
+                statement.bindString(2, serviceId)
+
+                statement.bindString(3, item.emailName ?: "") // Tambahkan juga untuk field lain yg mungkin null
+                statement.bindString(4, item.username ?: "")
+                statement.bindString(5, item.passwordEncrypted ?: "")
+                statement.bindString(6, item.notes ?: "")
+                statement.executeInsert()
+            }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
     }
     fun searchMyPasswords(idUser: String, searchText: String): List<mypasswordFragment.ItemPassword> {
         val db = this.readableDatabase
@@ -115,7 +282,7 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
         }
 
         cursor.close()
-        db.close()
+        
         return itemList
     }
 
@@ -168,32 +335,33 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
         return SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READWRITE)
     }
 
-    fun loginandcheckuser(username: String,email: String, password: String): users? {
-        val db = openDatabase()
-        val query = "SELECT id_user, uid, kunci_enkripsi, email, nama FROM users WHERE username = ? OR email = ? AND password = ?"
-        val cursor = db.rawQuery(query, arrayOf(username, email,password))
+
+    fun loginandcheckuser(username: String, email: String, password: String): users? {
+        // 1. Gunakan readableDatabase standar untuk konsistensi
+        val db = this.readableDatabase
+
+        // 2. PERBAIKI QUERY: Tambahkan kurung untuk logika yang benar dan ambil semua kolom
+        val query = "SELECT id_user, uid, kunci_enkripsi, email, nama, username, password FROM users WHERE (username = ? OR email = ?) AND password = ?"
+        val cursor = db.rawQuery(query, arrayOf(username, email, password))
 
         var user: users? = null
         if (cursor.moveToFirst()) {
             val id_user = cursor.getInt(cursor.getColumnIndexOrThrow("id_user"))
             val uid = cursor.getString(cursor.getColumnIndexOrThrow("uid"))
             val kunci_enkripsi = cursor.getString(cursor.getColumnIndexOrThrow("kunci_enkripsi"))
-            val email = cursor.getString(cursor.getColumnIndexOrThrow("email"))
+            val emailResult = cursor.getString(cursor.getColumnIndexOrThrow("email"))
             val nama = cursor.getString(cursor.getColumnIndexOrThrow("nama"))
+            // 3. TAMBAHKAN: Ambil username dan password dari cursor
+            val usernameResult = cursor.getString(cursor.getColumnIndexOrThrow("username"))
+            val passwordResult = cursor.getString(cursor.getColumnIndexOrThrow("password"))
 
-            user = users(id_user, uid,kunci_enkripsi, email,nama)
+            // 4. LENGKAPI: Panggil constructor dengan semua parameter
+            user = users(id_user, uid, kunci_enkripsi, emailResult, nama, usernameResult, passwordResult)
 
-            //tambahkan user saat ini
-            CurrentUser.user = users(
-                id_user = id_user,
-                uid = uid,
-                kunci_enkripsi = kunci_enkripsi,
-                email = email,
-                nama = nama
-            )
+            // Lakukan hal yang sama untuk CurrentUser
+            CurrentUser.user = user
         }
         cursor.close()
-        db.close()
         return user
     }
     fun generateRandomKeyString(length: Int = 16): String {
@@ -202,30 +370,51 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
             .map { allowedChars[SecureRandom().nextInt(allowedChars.length)] }
             .joinToString("")
     }
-    fun tambahkanUser(email: String, nama: String,  username: String, password: String): Boolean {
+
+    fun insertOrUpdateUser(user: LoginResponse) {
+        val db = this.writableDatabase
+        val values = ContentValues().apply {
+            put("id_user", user.id_user)
+            put("uid", user.uid)
+            put("kunci_enkripsi", user.kunci_enkripsi)
+            put("email", user.email)
+            put("nama", user.nama)
+            put("username", user.username)
+            put("password", user.password) // Password dari server sudah terenkripsi
+        }
+        // "replace" akan melakukan INSERT jika id_user belum ada, atau UPDATE jika sudah ada.
+        db.replace("users", null, values)
+    }
+
+    fun tambahkanUser(idUser: Int, email: String, nama: String, username: String, passwordNonEnkripsi: String): Boolean {
         val db = this.writableDatabase
         val values = ContentValues()
         val kunciAES = keyAES()
-        val encrypt = Encrypt(kunciAES.KunciAES128,kunciAES.KunciIVKey)
+        val encryptor = Encrypt(kunciAES.KunciAES128, kunciAES.KunciIVKey)
         val kunciBase64 = generateRandomKeyString()
-        values.put("uid","0")
-        values.put("kunci_enkripsi",kunciBase64)
+
+        // Sekarang kita masukkan id_user yang didapat dari server
+        values.put("id_user", idUser)
+        values.put("uid", "0")
+        values.put("kunci_enkripsi", kunciBase64)
         values.put("email", email)
         values.put("nama", nama)
         values.put("username", username)
-        values.put("password", encrypt.enkripsi(password))
+        values.put("password", encryptor.enkripsi(passwordNonEnkripsi))
 
         val result = db.insert("users", null, values)
-        db.close()
         return result != -1L
     }
-    fun insertTopasswordDatabase(idUser:String, idService: String, email: String ,username: String, password: String, notes:String ) {
+    fun insertTopasswordDatabase(idUser: String, email: String, username: String, password: String, notes: String) {
         val db = this.writableDatabase
 
+        // 1. Tambahkan kolom "id_service" ke dalam query
         val query = "INSERT INTO password (id_user, id_service, email, username, password, notes) VALUES (?, ?, ?, ?, ?, ?)"
         val statement = db.compileStatement(query)
+
+        // 2. Sesuaikan urutan binding dan tambahkan nilai "3" untuk id_service
         statement.bindString(1, idUser)
-        statement.bindString(2, idService)
+        statement.bindString(2, "3") // id_service diatur statis ke 3
         statement.bindString(3, email)
         statement.bindString(4, username)
         statement.bindString(5, password)
@@ -233,11 +422,10 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
 
         try {
             statement.executeInsert()
-
         } catch (e: Exception) {
-
+            // Handle exception jika perlu
         } finally {
-            db.close()
+            // Tidak perlu () di sini
         }
     }
 
@@ -248,7 +436,7 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
 
         val sudahAda = cursor.count > 0
         cursor.close()
-        db.close()
+        
 
         return sudahAda
     }
@@ -263,7 +451,7 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
             jumlah = cursor.getString(0)  // Mengambil nilai hasil COUNT
         }
         cursor.close()
-        db.close()
+        
 
         return jumlah
     }
@@ -277,7 +465,7 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
             jumlah = cursor.getString(0)  // Mengambil nilai hasil COUNT
         }
         cursor.close()
-        db.close()
+        
 
         return jumlah
     }

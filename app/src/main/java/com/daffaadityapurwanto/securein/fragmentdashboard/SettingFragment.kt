@@ -1,5 +1,6 @@
 package com.daffaadityapurwanto.securein.fragmentdashboard
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -30,13 +31,27 @@ class SettingFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+
         val tombolkeluar = view.findViewById<LinearLayout>(R.id.keluarsetting)
         tombolkeluar.setOnClickListener {
-            Intent(context, halamanlogin::class.java).also {
-                startActivity(it)
+            // Dapatkan activity yang menampung fragment ini
+            val activity = requireActivity()
 
+            // Akses SharedPreferences melalui activity
+            val sharedPref = activity.getSharedPreferences("LoginPrefs", Context.MODE_PRIVATE)
+            val editor = sharedPref.edit()
+            editor.putBoolean("isLoggedIn", false)
+            editor.putInt("userId", -1) // Set ID ke -1
+            editor.apply()
+
+            // Buat Intent dari context activity
+            val intent = Intent(activity, halamanlogin::class.java).also {
+                it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
 
+            // Mulai activity baru dan tutup activity saat ini
+            startActivity(intent)
+            activity.finish()
         }
         val tombolaboutus = view.findViewById<LinearLayout>(R.id.aboutus)
         tombolaboutus.setOnClickListener {

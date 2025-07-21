@@ -44,10 +44,9 @@ class MainDashboard : AppCompatActivity() {
         viewPager = binding.fragmentContainerView
         imageplus = findViewById(R.id.buattambahindata)
         imageplus.setOnClickListener {
-            Intent(this, menutambahdanedit::class.java).also {
-                startActivity(it)
-            }
-            finish()
+            val intent = Intent(this, menutambahdanedit::class.java)
+            startActivity(intent)
+
 
         }
         binding.tombolhome.background = ContextCompat.getDrawable(this, R.drawable.bulat)

@@ -5,7 +5,9 @@ data class users (
     val uid: String,
     val kunci_enkripsi: String,
     val email: String,
-    val nama: String
+    val nama: String,
+    val username: String, // <-- Pastikan ini ada
+    val password: String  // <-- Pastikan ini ada
 )
 //agar bisa dipanggil dan ditambahkan
 object CurrentUser {

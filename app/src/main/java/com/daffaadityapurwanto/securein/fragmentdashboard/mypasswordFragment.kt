@@ -11,17 +11,20 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.daffaadityapurwanto.securein.R
-import com.daffaadityapurwanto.securein.data.CurrentUser
 import com.daffaadityapurwanto.securein.data.databaseHelper
 import com.daffaadityapurwanto.securein.data.users
 import com.daffaadityapurwanto.securein.encryption.Encrypt
 import com.daffaadityapurwanto.securein.encryption.keyAES
 import com.daffaadityapurwanto.securein.menutambahdanedit
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class mypasswordFragment : Fragment() {
 
-    // Data class untuk menampung data setiap item password
+    // ... (Data class ItemPassword tidak berubah)
     data class ItemPassword(
         val logoResId: Int,
         val iduserpassword: String,
@@ -34,10 +37,11 @@ class mypasswordFragment : Fragment() {
         val createdDate: String
     )
 
-    // Adapter untuk ListView
+    // ... (AdapterPassword tidak banyak berubah, hanya penyesuaian kecil pada delete)
     class AdapterPassword(
         private val context: Context,
-        private var dataList: MutableList<ItemPassword>
+        private var dataList: MutableList<ItemPassword>,
+        private val fragment: mypasswordFragment // Tambahkan referensi ke fragment
     ) : BaseAdapter() {
 
         override fun getCount(): Int = dataList.size
@@ -47,11 +51,8 @@ class mypasswordFragment : Fragment() {
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
             val view = convertView ?: LayoutInflater.from(context)
                 .inflate(R.layout.passwordlistdarimenupassword, parent, false)
-
             val item = dataList[position]
-            val user = CurrentUser.user
 
-            // Inisialisasi semua view di dalam item list
             val logo = view.findViewById<ImageView>(R.id.logoItem)
             val akunnyanama = view.findViewById<TextView>(R.id.akunname)
             val email = view.findViewById<TextView>(R.id.emailName)
@@ -59,38 +60,35 @@ class mypasswordFragment : Fragment() {
             val btnSalin = view.findViewById<ImageView>(R.id.salin)
             val btnMenu = view.findViewById<ImageView>(R.id.titik3menu)
 
-            // Set data ke view
             logo.setImageResource(item.logoResId)
             akunnyanama.text = item.notes
             email.text = item.emailName
             date.text = "Created: ${item.createdDate}"
 
-            // Listener untuk tombol salin password
             btnSalin.setOnClickListener {
-                if (user != null) {
-                    val kunciAES = keyAES()
-                    val buatkunci = Encrypt(user.kunci_enkripsi, kunciAES.KunciIVKey)
-                    val passwordasli = buatkunci.dekripsi(item.password)
-                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                    val clip = android.content.ClipData.newPlainText("Password", passwordasli)
-                    clipboard.setPrimaryClip(clip)
-                    Toast.makeText(context, "Password disalin ke clipboard", Toast.LENGTH_SHORT).show()
+                fragment.lifecycleScope.launch(Dispatchers.IO) {
+                    val user = databaseHelper(context).getUserDetails(item.iduserpassword.toInt())
+                    if (user != null) {
+                        val kunciAES = keyAES()
+                        val buatkunci = Encrypt(user.kunci_enkripsi, kunciAES.KunciIVKey)
+                        val passwordasli = buatkunci.dekripsi(item.password)
+                        withContext(Dispatchers.Main) {
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                            val clip = android.content.ClipData.newPlainText("Password", passwordasli)
+                            clipboard.setPrimaryClip(clip)
+                            Toast.makeText(context, "Password disalin ke clipboard", Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 }
             }
-
-            // Listener untuk tombol menu (titik tiga)
-            btnMenu.setOnClickListener { anchorView ->
-                showPopupMenu(anchorView, item, position)
-            }
-
+            btnMenu.setOnClickListener { anchorView -> showPopupMenu(anchorView, item, position) }
             return view
         }
 
-        // Fungsi untuk menampilkan menu popup Edit/Delete
         private fun showPopupMenu(anchorView: View, item: ItemPassword, position: Int) {
+            // ... (Fungsi ini tidak berubah)
             val popup = PopupMenu(context, anchorView)
             popup.inflate(R.menu.password_options_menu)
-
             popup.setOnMenuItemClickListener { menuItem ->
                 when (menuItem.itemId) {
                     R.id.action_edit -> {
@@ -110,23 +108,24 @@ class mypasswordFragment : Fragment() {
             popup.show()
         }
 
-        // Fungsi untuk menampilkan dialog konfirmasi sebelum menghapus
         private fun showDeleteConfirmationDialog(item: ItemPassword, position: Int) {
             AlertDialog.Builder(context)
                 .setTitle("Hapus Password")
                 .setMessage("Apakah Anda yakin ingin menghapus data untuk '${item.notes}'?")
                 .setPositiveButton("Hapus") { _, _ ->
-                    val dbHelper = databaseHelper(context)
-                    dbHelper.deletePasswordById(item.idpassword)
-                    dataList.removeAt(position)
-                    notifyDataSetChanged()
-                    Toast.makeText(context, "Data berhasil dihapus", Toast.LENGTH_SHORT).show()
+                    fragment.lifecycleScope.launch(Dispatchers.IO) {
+                        databaseHelper(context).deletePasswordById(item.idpassword)
+                        withContext(Dispatchers.Main) {
+                            dataList.removeAt(position)
+                            notifyDataSetChanged()
+                            Toast.makeText(context, "Data berhasil dihapus", Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 }
                 .setNegativeButton("Batal", null)
                 .show()
         }
 
-        // Fungsi untuk memperbarui data list (digunakan oleh fitur search)
         fun updateData(newList: List<ItemPassword>) {
             dataList.clear()
             dataList.addAll(newList)
@@ -134,15 +133,12 @@ class mypasswordFragment : Fragment() {
         }
     }
 
-    // Properti untuk Fragment
     private lateinit var adapter: AdapterPassword
     private lateinit var dbHelper: databaseHelper
-    private var currentUser: users? = null
     private lateinit var listView: ListView
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         dbHelper = databaseHelper(requireContext())
-        currentUser = CurrentUser.user
         return inflater.inflate(R.layout.fragment_mypassword, container, false)
     }
 
@@ -151,43 +147,51 @@ class mypasswordFragment : Fragment() {
         listView = view.findViewById(R.id.listpasswordtampil)
         val searchEditText = view.findViewById<EditText>(R.id.searchingtext)
 
-        // Hanya jalankan jika user sudah login
-        if (currentUser != null) {
-            val currentUserId = currentUser!!.id_user
-            val initialData = ambildatapassword(currentUserId).toMutableList()
+        // Inisialisasi adapter dengan list kosong, data akan di-load di onResume
+        adapter = AdapterPassword(requireContext(), mutableListOf(), this)
+        listView.adapter = adapter
 
-            // Inisialisasi adapter dengan data awal
-            adapter = AdapterPassword(requireContext(), initialData)
-            listView.adapter = adapter
-
-            // Listener untuk search
-            searchEditText.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    val searchQuery = s.toString()
-                    val searchResult = dbHelper.searchMyPasswords(currentUserId.toString(), searchQuery)
-                    adapter.updateData(searchResult)
-                }
-                override fun afterTextChanged(s: Editable?) {}
-            })
-        }
+        searchEditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                loadPasswordData(s.toString()) // Panggil fungsi load dengan query pencarian
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
     }
 
     override fun onResume() {
         super.onResume()
-        // Refresh data saat fragment kembali aktif (misalnya setelah selesai mengedit)
-        if (currentUser != null) {
-            val freshData = ambildatapassword(currentUser!!.id_user)
-            if (::adapter.isInitialized) {
-                adapter.updateData(freshData)
+        loadPasswordData() // Muat semua data saat fragment kembali aktif
+    }
+
+    private fun loadPasswordData(searchQuery: String = "") {
+        val sharedPref = requireActivity().getSharedPreferences("LoginPrefs", Context.MODE_PRIVATE)
+        val currentUserId = sharedPref.getInt("userId", -1)
+
+        if (currentUserId != -1) {
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                // Operasi DB berjalan di background
+                val data = if (searchQuery.isBlank()) {
+                    ambildatapassword(currentUserId)
+                } else {
+                    dbHelper.searchMyPasswords(currentUserId.toString(), searchQuery)
+                }
+
+                // Update UI kembali di Main thread
+                withContext(Dispatchers.Main) {
+                    if (::adapter.isInitialized) {
+                        adapter.updateData(data)
+                    }
+                }
             }
         }
     }
 
-    // Fungsi untuk mengambil semua data password dari database
     fun ambildatapassword(idUser: Int): List<ItemPassword> {
-        val db = databaseHelper(requireContext()).readableDatabase
         val itemList = mutableListOf<ItemPassword>()
+        // Gunakan dbHelper instance yang sudah ada, jangan buat baru
+        val db = dbHelper.readableDatabase
         val query = "SELECT id_user, id_service, id_password, notes, email_password, username_password, password_password, dibuat_pada FROM password_view_lengkap WHERE id_user = ?"
         val cursor = db.rawQuery(query, arrayOf(idUser.toString()))
 
@@ -207,7 +211,7 @@ class mypasswordFragment : Fragment() {
             } while (cursor.moveToNext())
         }
         cursor.close()
-        db.close()
+        // JANGAN PANGGIL db.close() DI SINI
         return itemList
     }
 }
