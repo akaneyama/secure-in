@@ -68,9 +68,12 @@ class halamanlogin : AppCompatActivity() {
         btnDaftar.setOnClickListener {
             goToDaftar()
         }
-
+        val btnLupaPassword = findViewById<TextView>(R.id.btnLupaPassword)
         val kunciAES = keyAES()
         val encrypt = Encrypt(kunciAES.KunciAES128, kunciAES.KunciIVKey)
+        btnLupaPassword.setOnClickListener {
+            startActivity(Intent(this, ResetPasswordActivity::class.java))
+        }
         btnLogin.setOnClickListener {
             val usernameStr = etUsername.text.toString().trim()
             val passwordStr = etPassword.text.toString()
@@ -106,25 +109,31 @@ class halamanlogin : AppCompatActivity() {
 
                         Log.d("LoginVerifyProcess", "INFO: Respons server diterima. Kode: ${response.code()}")
 
-                        withContext(Dispatchers.Main) {
-                            if (response.isSuccessful) {
-                                Log.d("LoginVerifyProcess", "SUKSES: Login server berhasil (Kode 200).")
-                                val userFromServer = response.body()!!
-                                dbHelper.insertOrUpdateUser(userFromServer)
+                        if (response.isSuccessful) {
+                            val userFromServer = response.body()!!
+                            Log.d("LoginVerifyProcess", "SUKSES: Login server berhasil. Menyimpan data user ID: ${userFromServer.id_user} ke lokal.")
+
+                            // PERBAIKAN: Jalankan operasi database di background thread (di sini)
+                            dbHelper.insertOrUpdateUser(userFromServer)
+
+                            // Pindah ke Main thread HANYA untuk update UI
+                            withContext(Dispatchers.Main) {
+                                Log.d("LoginVerifyProcess", "Data lokal berhasil disimpan. Menuju dashboard.")
                                 saveLoginStatus(true, userFromServer.id_user)
                                 goToDashboard()
-
-                            } else if (response.code() == 403) {
-                                Log.w("LoginVerifyProcess", "PERINGATAN: Login gagal (Kode 403), akun belum diverifikasi. Mengarahkan ke halaman verifikasi.")
+                            }
+                        } else if (response.code() == 403) {
+                            Log.w("LoginVerifyProcess", "PERINGATAN: Login gagal (Kode 403), akun belum diverifikasi.")
+                            withContext(Dispatchers.Main) {
                                 Toast.makeText(this@halamanlogin, "Akun belum aktif. Cek email untuk verifikasi.", Toast.LENGTH_LONG).show()
-
                                 val intent = Intent(this@halamanlogin, halamandaftar::class.java).apply {
                                     putExtra("VERIFY_EMAIL", usernameStr)
                                 }
                                 startActivity(intent)
-
-                            } else {
-                                Log.w("LoginVerifyProcess", "GAGAL: Login server gagal (Kode ${response.code()}). Kredensial salah atau error lain.")
+                            }
+                        } else {
+                            Log.w("LoginVerifyProcess", "GAGAL: Login server gagal (Kode ${response.code()}).")
+                            withContext(Dispatchers.Main) {
                                 showCustomDialog("wrong_password")
                             }
                         }

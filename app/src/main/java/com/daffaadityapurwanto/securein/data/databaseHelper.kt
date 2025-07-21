@@ -27,7 +27,7 @@ import com.daffaadityapurwanto.securein.network.PasswordData
 class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
         companion object {
-            private const val DATABASE_NAME = "secureindb.db"
+            const val DATABASE_NAME = "secureindb.db"
             private const val DATABASE_VERSION = 1
         }
 
@@ -336,6 +336,8 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
     }
 
 
+    // Di dalam file databaseHelper.kt
+
     fun loginandcheckuser(username: String, email: String, password: String): users? {
         val db = this.readableDatabase
         val query = "SELECT id_user, uid, kunci_enkripsi, email, nama, username, password, is_verified FROM users WHERE (username = ? OR email = ?) AND password = ? AND is_verified = 1"
@@ -345,12 +347,13 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
         if (cursor.moveToFirst()) {
             user = users(
                 id_user = cursor.getInt(cursor.getColumnIndexOrThrow("id_user")),
-                uid = cursor.getString(cursor.getColumnIndexOrThrow("uid")),
-                kunci_enkripsi = cursor.getString(cursor.getColumnIndexOrThrow("kunci_enkripsi")),
-                email = cursor.getString(cursor.getColumnIndexOrThrow("email")),
-                nama = cursor.getString(cursor.getColumnIndexOrThrow("nama")),
-                username = cursor.getString(cursor.getColumnIndexOrThrow("username")),
-                password = cursor.getString(cursor.getColumnIndexOrThrow("password")),
+                // TAMBAHKAN '?: ""' DI SEMUA GETSTRING UNTUK MENCEGAH CRASH DARI DATA NULL
+                uid = cursor.getString(cursor.getColumnIndexOrThrow("uid")) ?: "0",
+                kunci_enkripsi = cursor.getString(cursor.getColumnIndexOrThrow("kunci_enkripsi")) ?: "",
+                email = cursor.getString(cursor.getColumnIndexOrThrow("email")) ?: "",
+                nama = cursor.getString(cursor.getColumnIndexOrThrow("nama")) ?: "",
+                username = cursor.getString(cursor.getColumnIndexOrThrow("username")) ?: "",
+                password = cursor.getString(cursor.getColumnIndexOrThrow("password")) ?: "",
                 is_verified = cursor.getInt(cursor.getColumnIndexOrThrow("is_verified"))
             )
             CurrentUser.user = user
@@ -358,6 +361,7 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
         cursor.close()
         return user
     }
+
     fun generateRandomKeyString(length: Int = 16): String {
         val allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
         return (1..length)
@@ -387,7 +391,6 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
         val encryptor = Encrypt(kunciAES.KunciAES128, kunciAES.KunciIVKey)
         val kunciBase64 = generateRandomKeyString()
 
-        // Sekarang kita masukkan id_user yang didapat dari server
         values.put("id_user", idUser)
         values.put("uid", "0")
         values.put("kunci_enkripsi", kunciBase64)
@@ -395,6 +398,7 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
         values.put("nama", nama)
         values.put("username", username)
         values.put("password", encryptor.enkripsi(passwordNonEnkripsi))
+        values.put("is_verified", 1) // <-- TAMBAHKAN/PASTIKAN BARIS INI ADA
 
         val result = db.insert("users", null, values)
         return result != -1L

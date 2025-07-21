@@ -1,6 +1,7 @@
 package com.daffaadityapurwanto.securein.fragmentdashboard
 
 import android.app.Activity
+import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -9,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import android.util.Log
 import android.widget.Switch
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -29,8 +31,10 @@ import java.io.FileOutputStream
 import java.io.OutputStreamWriter
 import android.text.InputType
 import android.widget.EditText
+import androidx.core.content.FileProvider
 import com.daffaadityapurwanto.securein.network.RetrofitClient
 import com.daffaadityapurwanto.securein.network.UpdateUserRequest
+import java.io.File
 
 class SettingFragment : Fragment() {
 
@@ -76,7 +80,7 @@ class SettingFragment : Fragment() {
 
     private fun setupClickListeners(view: View) {
         view.findViewById<LinearLayout>(R.id.exporttofile).setOnClickListener { exportEncryptedDb() }
-        view.findViewById<LinearLayout>(R.id.exporttofileunencrypted).setOnClickListener { exportClearCsv() }
+//        view.findViewById<LinearLayout>(R.id.exporttofileunencrypted).setOnClickListener { exportClearCsv() }
 //        view.findViewById<LinearLayout>(R.id.importfromfile).setOnClickListener { importDb() }
         view.findViewById<LinearLayout>(R.id.clearLocalData).setOnClickListener { showClearDataConfirmation() }
         view.findViewById<LinearLayout>(R.id.keluarsetting).setOnClickListener { logout() }
@@ -215,24 +219,54 @@ class SettingFragment : Fragment() {
     // --- Implementasi Fitur ---
 
     private fun exportEncryptedDb() {
-        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "application/vnd.sqlite3" // Tipe file untuk database
-            putExtra(Intent.EXTRA_TITLE, "securein_encrypted_backup.db")
-            putExtra("export_type", "encrypted_db")
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                // 1. Tentukan file sumber (database) dan file tujuan (di cache)
+                val sourceDbFile = requireContext().getDatabasePath(databaseHelper.DATABASE_NAME)
+                val destinationFile = File(requireContext().cacheDir, "securein_backup.db")
+
+                // Pastikan database helper ditutup untuk menyalin file yang stabil
+                dbHelper.close()
+
+                // 2. Salin file database ke cache, timpa jika sudah ada
+                sourceDbFile.copyTo(destinationFile, overwrite = true)
+                Log.d("ExportDB", "Database disalin ke cache: ${destinationFile.absolutePath}")
+
+                // 3. Dapatkan Uri yang aman menggunakan FileProvider
+                val contentUri = FileProvider.getUriForFile(
+                    requireContext(),
+                    "${requireContext().packageName}.provider", // Harus sama dengan 'authorities' di AndroidManifest
+                    destinationFile
+                )
+                Log.d("ExportDB", "Content Uri dibuat: $contentUri")
+
+                // 4. Buat Intent untuk "Bagikan" (ACTION_SEND)
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "application/vnd.sqlite3" // Tipe MIME untuk file .db atau .sqlite3
+                    putExtra(Intent.EXTRA_STREAM, contentUri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) // Beri izin baca sementara
+                    putExtra(Intent.EXTRA_SUBJECT, "SecureIn Database Backup")
+                }
+
+                // 5. Jalankan Intent di Main Thread
+                withContext(Dispatchers.Main) {
+                    startActivity(Intent.createChooser(shareIntent, "Ekspor Database Via..."))
+                }
+
+            } catch (e: Exception) {
+                Log.e("ExportDB", "Gagal mengekspor database", e)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(requireContext(), "Gagal Ekspor: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            } finally {
+                // Penting: Buka kembali koneksi dbHelper
+                dbHelper = databaseHelper(requireContext())
+            }
         }
-        createFileLauncher.launch(intent)
     }
 
-    private fun exportClearCsv() {
-        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "text/csv"
-            putExtra(Intent.EXTRA_TITLE, "securein_passwords.csv")
-            putExtra("export_type", "clear_csv")
-        }
-        createFileLauncher.launch(intent)
-    }
+
+
 
     private fun importDb() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
@@ -301,19 +335,76 @@ class SettingFragment : Fragment() {
 
     // --- Fungsi Bantuan untuk File ---
 
+    // Di dalam SettingFragment.kt
+
     private fun copyDbToUri(destinationUri: Uri) {
-        try {
-            val dbFile = requireContext().getDatabasePath("secureindb.db")
-            FileInputStream(dbFile).use { inputStream ->
-                requireActivity().contentResolver.openOutputStream(destinationUri)?.use { outputStream ->
-                    inputStream.copyTo(outputStream)
+        // Jalankan di luar lifecycleScope utama agar tidak terikat langsung pada view
+        // Gunakan Dispatchers.IO untuk operasi file yang berat
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            var success = false
+            var errorMessage = ""
+            var dbFile: File? = null
+
+            try {
+                // --- BAGIAN PENTING DIMULAI ---
+                // 1. Dapatkan path SEBELUM menutup database
+                val dbPath = requireContext().getDatabasePath(databaseHelper.DATABASE_NAME).absolutePath
+                if (dbPath.isNullOrEmpty()) {
+                    throw IllegalStateException("Path database tidak valid.")
+                }
+                dbFile = File(dbPath)
+
+                // 2. Tutup helper untuk melepaskan semua koneksi ke file DB
+                Log.d("BackupDB", "Menutup database helper...")
+                dbHelper.close()
+                // --- BAGIAN PENTING SELESAI ---
+
+                Log.d("BackupDB", "Lokasi file DB: ${dbFile.absolutePath}, exists: ${dbFile.exists()}")
+
+                if (dbFile.exists()) {
+                    FileInputStream(dbFile).use { inputStream ->
+                        requireActivity().contentResolver.openOutputStream(destinationUri)?.use { outputStream ->
+                            val totalBytes = inputStream.copyTo(outputStream)
+                            if (totalBytes > 0) {
+                                success = true
+                                Log.d("BackupDB", "Copy berhasil: $totalBytes bytes ditulis.")
+                            } else {
+                                errorMessage = "Tidak ada data yang ditulis (file 0 byte)."
+                                Log.e("BackupDB", errorMessage)
+                            }
+                        } ?: run {
+                            errorMessage = "Gagal membuat OutputStream dari Uri."
+                            Log.e("BackupDB", errorMessage)
+                        }
+                    }
+                } else {
+                    errorMessage = "File database tidak ditemukan di path: ${dbFile.absolutePath}"
+                    Log.e("BackupDB", errorMessage)
+                }
+
+            } catch (e: Exception) {
+                errorMessage = e.message ?: "Terjadi error tidak dikenal"
+                Log.e("BackupDB", "Exception saat backup DB", e)
+            } finally {
+                // --- BAGIAN PENTING LAINNYA ---
+                // 3. Buka kembali koneksi database agar aplikasi bisa berfungsi normal lagi
+                Log.d("BackupDB", "Membuka kembali koneksi database...")
+                dbHelper = databaseHelper(requireContext())
+                // --- SELESAI ---
+
+                // Pindahkan pembaruan UI ke Main thread
+                withContext(Dispatchers.Main) {
+                    if (success) {
+                        Toast.makeText(requireContext(), "Database berhasil diekspor!", Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(requireContext(), "Gagal ekspor DB: $errorMessage", Toast.LENGTH_LONG).show()
+                    }
                 }
             }
-            Toast.makeText(requireContext(), "Database berhasil diekspor!", Toast.LENGTH_LONG).show()
-        } catch (e: Exception) {
-            Toast.makeText(requireContext(), "Gagal ekspor DB: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
+
+
 
     private fun writePasswordsToCsv(destinationUri: Uri) {
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
@@ -356,7 +447,7 @@ class SettingFragment : Fragment() {
             .setMessage("Ini akan menimpa semua data lokal Anda saat ini dengan data dari file yang dipilih. Lanjutkan?")
             .setPositiveButton("Ya, Impor") { _, _ ->
                 try {
-                    val dbFile = requireContext().getDatabasePath("secureindb.db")
+                    val dbFile = requireContext().getDatabasePath("securein.db")
                     requireActivity().contentResolver.openInputStream(sourceUri)?.use { inputStream ->
                         FileOutputStream(dbFile).use { outputStream ->
                             inputStream.copyTo(outputStream)

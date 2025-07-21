@@ -68,7 +68,11 @@ data class OtpVerificationResponse(
 
 // --- Interface untuk Retrofit ---
 interface ApiService {
+    @POST("request-password-reset")
+    suspend fun requestPasswordReset(@Body request: ResetPassRequest): Response<BackupResponse>
 
+    @POST("reset-password-with-otp")
+    suspend fun performPasswordReset(@Body request: ResetPassPerformRequest): Response<BackupResponse>
     @POST("request-otp")
     suspend fun requestOtp(@Body request: OtpRequest): Response<BackupResponse>
 
@@ -107,8 +111,18 @@ data class LoginRequest(
     @SerializedName("username") val username: String, // Bisa berisi username atau email
     @SerializedName("password") val passwordEncrypted: String
 )
+data class ResetPassRequest(
+    @SerializedName("email") val email: String
+)
 
+data class ResetPassPerformRequest(
+    @SerializedName("email") val email: String,
+    @SerializedName("otp") val otp: String,
+    @SerializedName("new_password") val newPasswordEncrypted: String
+)
 // Model untuk response login (mirip dengan data class 'users' Anda)
+// Di dalam file network/ApiService.kt
+
 data class LoginResponse(
     @SerializedName("id_user") val id_user: Int,
     @SerializedName("uid") val uid: String,
@@ -116,13 +130,13 @@ data class LoginResponse(
     @SerializedName("email") val email: String,
     @SerializedName("nama") val nama: String,
     @SerializedName("username") val username: String,
-    @SerializedName("password") val password: String,
-    @SerializedName("is_verified") val is_verified: Int // <-- TAMBAHKAN BARIS INI
+    @SerializedName("password") val password: String, // <-- Pastikan tidak ada tanda tanya '?'
+    @SerializedName("is_verified") val is_verified: Int
 )
 
 // --- Objek untuk membuat instance Retrofit ---
 object RetrofitClient {
-    private const val BASE_URL = "http://192.168.1.2:5000/" // URL API Anda
+    private const val BASE_URL = "https://securein.smartcube.biz.id/" // URL API Anda
 
     val instance: ApiService by lazy {
         val retrofit = Retrofit.Builder()
