@@ -107,8 +107,7 @@ class DashboardFragment : Fragment() {
 
         val notificationIcon = view.findViewById<ImageView>(R.id.notification)
         notificationIcon.setOnClickListener {
-            NotificationHelper.createNotificationChannel(requireContext())
-            NotificationHelper.showExpirationWarningNotification(requireContext(), 5)
+            NotificationHelper.showExpirationWarningNotification(requireContext(), 12)
         }
     }
 

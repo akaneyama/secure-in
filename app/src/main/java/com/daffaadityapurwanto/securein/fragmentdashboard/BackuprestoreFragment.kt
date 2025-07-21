@@ -23,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import android.util.Log
+import com.daffaadityapurwanto.securein.data.NotificationHelper
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -102,6 +103,7 @@ class BackuprestoreFragment : Fragment() {
 
         // Setup listener untuk tombol
         backupButton.setOnClickListener {
+
             showConfirmationDialog("Backup") { performBackup() }
         }
 
@@ -180,9 +182,12 @@ class BackuprestoreFragment : Fragment() {
                     if (response.isSuccessful) {
                         Toast.makeText(requireContext(), "Backup berhasil!", Toast.LENGTH_LONG).show()
                         dbHelper.addHistoryLog("Backup", "Success", getCurrentWibTimestamp()) // Tambah log sukses
+                        NotificationHelper.showBackupNotification(requireContext(), "Success", "Backup")
                     } else {
                         Toast.makeText(requireContext(), "Backup gagal: ${response.message()}", Toast.LENGTH_LONG).show()
                         dbHelper.addHistoryLog("Backup", "Failed", getCurrentWibTimestamp()) // Tambah log gagal
+                        NotificationHelper.showBackupNotification(requireContext(), "Failed", "Backup")
+
                     }
                     loadHistory() // Refresh list histori
                 }
@@ -195,6 +200,7 @@ class BackuprestoreFragment : Fragment() {
             }
         }
     }
+
 
     private fun performRestore() {
         val sharedPref = requireActivity().getSharedPreferences("LoginPrefs", Context.MODE_PRIVATE)
@@ -214,9 +220,13 @@ class BackuprestoreFragment : Fragment() {
                         dbHelper.overwriteLocalPasswords(currentUserId, passwordsFromServer)
                         Toast.makeText(requireContext(), "Restore berhasil!", Toast.LENGTH_LONG).show()
                         dbHelper.addHistoryLog("Restore", "Success", getCurrentWibTimestamp())
+                        // Tampilkan notifikasi SUKSES
+                        NotificationHelper.showBackupNotification(requireContext(), "Success", "Restore")
                     } else {
                         Toast.makeText(requireContext(), "Restore gagal: ${response.message()}", Toast.LENGTH_LONG).show()
                         dbHelper.addHistoryLog("Restore", "Failed", getCurrentWibTimestamp())
+                        // Tampilkan notifikasi GAGAL
+                        NotificationHelper.showBackupNotification(requireContext(), "Failed", "Restore")
                     }
                     loadHistory()
                 }
@@ -224,6 +234,7 @@ class BackuprestoreFragment : Fragment() {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
                     dbHelper.addHistoryLog("Restore", "Failed", getCurrentWibTimestamp())
+                    NotificationHelper.showBackupNotification(requireContext(), "Failed", "Restore")
                     loadHistory()
                 }
             }

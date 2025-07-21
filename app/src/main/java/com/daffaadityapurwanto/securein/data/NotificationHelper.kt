@@ -5,58 +5,114 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.daffaadityapurwanto.securein.MainActivity
+import androidx.core.content.ContextCompat
+import com.daffaadityapurwanto.securein.MainDashboard
 import com.daffaadityapurwanto.securein.R
 
 object NotificationHelper {
 
-    private const val CHANNEL_ID = "10"
-    private const val NOTIFICATION_ID = 101
+    // --- Channel & ID untuk Notifikasi Peringatan Kadaluwarsa ---
+    private const val EXPIRATION_CHANNEL_ID = "expiration_channel"
+    private const val EXPIRATION_NOTIFICATION_ID = 101
 
-    // Fungsi untuk membuat Channel Notifikasi (Wajib untuk Android 8.0 ke atas)
-    fun createNotificationChannel(context: Context) {
+    // --- Channel & ID untuk Notifikasi Backup & Restore ---
+    private const val BACKUP_CHANNEL_ID = "backup_channel"
+    private const val BACKUP_NOTIFICATION_ID = 102
+
+    /**
+     * Membuat Channel Notifikasi. Wajib untuk Android 8.0 (Oreo) ke atas.
+     * Fungsi ini aman dipanggil berkali-kali, sistem akan mengabaikannya jika channel sudah ada.
+     */
+    private fun createNotificationChannel(context: Context, channelId: String, channelName: String, channelDescription: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Password Expiration"
-            val descriptionText = "Notifikasi untuk kata sandi yang akan kedaluwarsa"
             val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel(com.daffaadityapurwanto.securein.data.NotificationHelper.CHANNEL_ID, name, importance).apply {
-                description = descriptionText
+            val channel = NotificationChannel(channelId, channelName, importance).apply {
+                description = channelDescription
             }
-            // Daftarkan channel ke sistem
             val notificationManager: NotificationManager =
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
     }
 
-    // Fungsi untuk menampilkan notifikasi
+    /**
+     * Menampilkan notifikasi untuk kata sandi yang akan kedaluwarsa.
+     */
     fun showExpirationWarningNotification(context: Context, expiringCount: Int) {
-        // Intent yang akan dijalankan saat notifikasi di-klik (membuka aplikasi)
-        val intent = Intent(context, MainActivity::class.java).apply {
+        // Buat channel-nya dulu, pastikan sudah ada
+        createNotificationChannel(
+            context,
+            EXPIRATION_CHANNEL_ID,
+            "Peringatan Password",
+            "Notifikasi untuk kata sandi yang akan kedaluwarsa"
+        )
+
+        val intent = Intent(context, MainDashboard::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         val pendingIntent: PendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
-        val builder = NotificationCompat.Builder(context,
-            com.daffaadityapurwanto.securein.data.NotificationHelper.CHANNEL_ID
-        )
-            .setSmallIcon(R.drawable.warning) // Kita akan buat ikon ini
-            .setContentTitle("Peringatan Keamanan")
-            .setContentText("Anda memiliki 12 kata sandi yang perlu diperbarui.")
-            .setStyle(NotificationCompat.BigTextStyle()
-                .bigText("Beberapa kata sandi Anda sudah lebih dari 3 bulan. Demi keamanan, pertimbangkan untuk memperbaruinya."))
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setContentIntent(pendingIntent) // Aksi saat di-klik
-            .setAutoCancel(true) // Menghilangkan notifikasi setelah di-klik
+        // Gunakan expiringCount untuk membuat teks dinamis
+        val contentText = "Anda memiliki $expiringCount kata sandi yang perlu diperbarui."
+        val bigText = "Beberapa kata sandi Anda sudah lebih dari 3 bulan. Demi keamanan, pertimbangkan untuk memperbaruinya."
 
-        // Tampilkan notifikasi
+        val builder = NotificationCompat.Builder(context, EXPIRATION_CHANNEL_ID)
+            .setSmallIcon(R.drawable.warning)
+            .setContentTitle("Peringatan Keamanan")
+            .setContentText(contentText)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(bigText))
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+
+        showNotification(context, EXPIRATION_NOTIFICATION_ID, builder)
+    }
+
+    /**
+     * Menampilkan notifikasi untuk status proses backup atau restore.
+     */
+    fun showBackupNotification(context: Context, status: String, action: String = "Backup") {
+        // Buat channel-nya dulu
+        createNotificationChannel(
+            context,
+            BACKUP_CHANNEL_ID,
+            "Status Sinkronisasi",
+            "Notifikasi untuk status proses backup dan restore"
+        )
+
+        val title: String
+        val content: String
+
+        // Tentukan judul dan isi notifikasi berdasarkan status
+        if (status.equals("Success", ignoreCase = true)) {
+            title = "$action Berhasil"
+            content = "Data Anda telah berhasil di-$action ke server."
+        } else {
+            title = "$action Gagal"
+            content = "Terjadi kesalahan saat mencoba melakukan $action data."
+        }
+
+        val builder = NotificationCompat.Builder(context, BACKUP_CHANNEL_ID)
+            .setSmallIcon(if (status.equals("Success", ignoreCase = true)) R.drawable.suksesbro else R.drawable.warning)
+            .setContentTitle(title)
+            .setContentText(content)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+
+        showNotification(context, BACKUP_NOTIFICATION_ID, builder)
+    }
+
+    /**
+     * Fungsi terpusat untuk menampilkan notifikasi setelah memeriksa izin.
+     */
+    private fun showNotification(context: Context, notificationId: Int, builder: NotificationCompat.Builder) {
         with(NotificationManagerCompat.from(context)) {
-            // Cek lagi izin sebelum menampilkan, ini adalah praktik yang aman
-            if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                notify(com.daffaadityapurwanto.securein.data.NotificationHelper.NOTIFICATION_ID, builder.build())
+            if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                notify(notificationId, builder.build())
             }
         }
     }

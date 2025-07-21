@@ -33,7 +33,12 @@ data class PasswordData(
     @SerializedName("password")
     val passwordEncrypted: String // Kirim password yang sudah terenkripsi
 )
-
+data class UpdateUserRequest(
+    @SerializedName("user_id") val userId: Int,
+    @SerializedName("current_password") val currentPasswordEncrypted: String,
+    @SerializedName("field_to_update") val fieldToUpdate: String,
+    @SerializedName("new_value") val newValue: String
+)
 // --- Model Data untuk Response dari API ---
 data class BackupResponse(
     @SerializedName("status")
@@ -54,6 +59,8 @@ interface ApiService {
     suspend fun registerUser(@Body request: RegisterRequest): Response<RegisterResponse>
     @POST("login")
     suspend fun loginUser(@Body request: LoginRequest): Response<LoginResponse>
+    @POST("update_user")
+    suspend fun updateUser(@Body request: UpdateUserRequest): Response<BackupResponse> // Bisa pakai ulang BackupResponse
 }
 
 // Model data untuk dikirim saat registrasi

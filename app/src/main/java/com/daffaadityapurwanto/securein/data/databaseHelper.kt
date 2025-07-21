@@ -156,6 +156,12 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
     """.trimIndent()
         db.execSQL(CREATE_HISTORY_TABLE)
     }
+    fun clearAllPasswords(userId: Int) {
+        val db = this.writableDatabase
+        db.delete("password", "id_user = ?", arrayOf(userId.toString()))
+        // Anda juga bisa menambahkan delete untuk tabel history_log jika perlu
+        // db.delete("history_log", null, null)
+    }
     fun getLastSuccessfulSyncTimestamp(): String? {
         val db = this.readableDatabase
         var timestamp: String? = null
@@ -172,6 +178,21 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
 
         cursor.close()
         return timestamp
+    }
+    fun verifyUserPassword(userId: Int, encryptedPasswordToCheck: String): Boolean {
+        val db = this.readableDatabase
+        val cursor = db.rawQuery("SELECT id_user FROM users WHERE id_user = ? AND password = ?", arrayOf(userId.toString(), encryptedPasswordToCheck))
+        val isMatch = cursor.count > 0
+        cursor.close()
+        return isMatch
+    }
+
+    fun updateUserField(userId: Int, fieldName: String, newValue: String) {
+        val db = this.writableDatabase
+        val values = ContentValues().apply {
+            put(fieldName, newValue)
+        }
+        db.update("users", values, "id_user = ?", arrayOf(userId.toString()))
     }
     fun addHistoryLog(type: String, status: String, timestamp: String) { // <-- 1. Tambahkan parameter ketiga
         val db = this.writableDatabase
@@ -203,7 +224,7 @@ class databaseHelper(private val context: Context) : SQLiteOpenHelper(context, D
     fun getHistoryLogs(): List<BackuprestoreFragment.HistoryLog> {
         val logList = mutableListOf<BackuprestoreFragment.HistoryLog>()
         val db = this.readableDatabase
-        val cursor = db.rawQuery("SELECT log_type, status, timestamp FROM history_log ORDER BY timestamp DESC", null)
+        val cursor = db.rawQuery("SELECT log_type, status, timestamp FROM history_log ORDER BY timestamp DESC LIMIT 10", null)
         if (cursor.moveToFirst()) {
             do {
                 logList.add(BackuprestoreFragment.HistoryLog(

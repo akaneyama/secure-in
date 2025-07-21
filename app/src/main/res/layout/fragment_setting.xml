@@ -51,6 +51,8 @@
                 android:textColor="@color/white"/>
 
         </LinearLayout>
+
+
         <LinearLayout
             android:id="@+id/exporttofileunencrypted"
             android:layout_width="match_parent"
@@ -72,8 +74,29 @@
                 android:textColor="@color/white"/>
 
         </LinearLayout>
+<!--        <LinearLayout-->
+<!--            android:id="@+id/importfromfile"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="55dp"-->
+<!--            android:orientation="horizontal"-->
+<!--            android:layout_marginTop="8dp"-->
+<!--            android:background="@drawable/kotakdarisettingfragment"-->
+<!--            android:padding="12dp"-->
+<!--            android:gravity="center_vertical">-->
+
+
+<!--            <TextView-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_weight="1"-->
+<!--                android:text="Import From File"-->
+<!--                android:textSize="16sp"-->
+<!--                android:fontFamily="@font/opensansbold"-->
+<!--                android:textColor="@color/white"/>-->
+
+<!--        </LinearLayout>-->
         <LinearLayout
-            android:id="@+id/importfromfile"
+            android:id="@+id/ubahNama"
             android:layout_width="match_parent"
             android:layout_height="55dp"
             android:orientation="horizontal"
@@ -82,18 +105,74 @@
             android:padding="12dp"
             android:gravity="center_vertical">
 
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Ubah Nama"
+                android:textSize="16sp"
+                android:fontFamily="@font/opensansbold"
+                android:textColor="@color/white"/>
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/ubahUsername"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/kotakdarisettingfragment"
+            android:padding="12dp"
+            android:gravity="center_vertical">
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Import From File"
+                android:text="Ubah Username"
                 android:textSize="16sp"
                 android:fontFamily="@font/opensansbold"
                 android:textColor="@color/white"/>
-
         </LinearLayout>
 
+        <LinearLayout
+            android:id="@+id/ubahEmail"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/kotakdarisettingfragment"
+            android:padding="12dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Ubah Email"
+                android:textSize="16sp"
+                android:fontFamily="@font/opensansbold"
+                android:textColor="@color/white"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ubahPassword"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/kotakdarisettingfragment"
+            android:padding="12dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Ubah Password"
+                android:textSize="16sp"
+                android:fontFamily="@font/opensansbold"
+                android:textColor="@color/white"/>
+        </LinearLayout>
         <LinearLayout
             android:id="@+id/clearLocalData"
             android:layout_width="match_parent"
@@ -116,29 +195,29 @@
 
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="55dp"
-            android:orientation="horizontal"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/kotakdarisettingfragment"
-            android:padding="12dp"
-            android:gravity="center_vertical">
+<!--        <LinearLayout-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="55dp"-->
+<!--            android:orientation="horizontal"-->
+<!--            android:layout_marginTop="8dp"-->
+<!--            android:background="@drawable/kotakdarisettingfragment"-->
+<!--            android:padding="12dp"-->
+<!--            android:gravity="center_vertical">-->
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Enable Fingerprint"
-                android:textSize="16sp"
-                android:fontFamily="@font/opensansbold"
-                android:textColor="@color/white"/>
+<!--&lt;!&ndash;            <TextView&ndash;&gt;-->
+<!--&lt;!&ndash;                android:layout_width="0dp"&ndash;&gt;-->
+<!--&lt;!&ndash;                android:layout_height="wrap_content"&ndash;&gt;-->
+<!--&lt;!&ndash;                android:layout_weight="1"&ndash;&gt;-->
+<!--&lt;!&ndash;                android:text="Enable Fingerprint"&ndash;&gt;-->
+<!--&lt;!&ndash;                android:textSize="16sp"&ndash;&gt;-->
+<!--&lt;!&ndash;                android:fontFamily="@font/opensansbold"&ndash;&gt;-->
+<!--&lt;!&ndash;                android:textColor="@color/white"/>&ndash;&gt;-->
 
-            <Switch
-                android:id="@+id/fingerprintSwitch"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-        </LinearLayout>
+<!--&lt;!&ndash;            <Switch&ndash;&gt;-->
+<!--&lt;!&ndash;                android:id="@+id/fingerprintSwitch"&ndash;&gt;-->
+<!--&lt;!&ndash;                android:layout_width="wrap_content"&ndash;&gt;-->
+<!--&lt;!&ndash;                android:layout_height="wrap_content"/>&ndash;&gt;-->
+<!--        </LinearLayout>-->
 
 
 
